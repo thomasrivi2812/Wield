@@ -9,6 +9,24 @@ cp .env.example .env.local
 npm run doctor      # tout est rouge, c'est normal
 ```
 
+> **Si tes variables sont chez l'hébergeur et pas en local**, `npm run doctor`
+> te dira toujours que tout manque : il lit `.env.local`. Pour interroger le
+> déploiement :
+>
+> ```bash
+> npm run doctor -- https://ton-domaine
+> ```
+>
+> Il faut pour cela une valeur identique de `DIAGNOSTIC_TOKEN` des deux côtés.
+> Sans elle, `/api/sante` est désactivé en production — la carte de ce qui est
+> branché est déjà une information utile à qui cherche une faille.
+
+> **Sur Vercel, une variable ajoutée ne s'applique pas au déploiement en
+> cours.** Il faut redéployer. Les variables `NEXT_PUBLIC_*` sont même figées
+> dans le JavaScript au moment de la compilation : sans nouveau build, elles
+> n'existent pas côté navigateur. C'est la cause numéro un de « j'ai tout mis
+> et rien ne marche ».
+
 Le principe qui vaut partout : **rien ne casse quand une brique manque.** Le
 site tourne dès maintenant, il affiche simplement « non mesuré » à la place
 d'un résultat, et il le dit. Tu peux donc t'arrêter après n'importe quelle
@@ -73,26 +91,71 @@ débit.
 npm run doctor   # Supabase doit passer au vert
 ```
 
-### Activer la connexion Google
+### Le lien e-mail
 
-1. **Authentication → Providers → Google → Enable**.
-2. Il te faut un identifiant OAuth Google :
-   [console.cloud.google.com](https://console.cloud.google.com) → *APIs &
-   Services* → *Credentials* → **Create OAuth client ID** → type *Web
-   application*.
-3. Dans **Authorized redirect URIs**, colle l'URL que Supabase affiche sous le
-   champ Google — elle ressemble à
-   `https://<ton-projet>.supabase.co/auth/v1/callback`.
-4. Recopie *Client ID* et *Client secret* dans Supabase.
-5. **Authentication → URL Configuration** → *Redirect URLs*, ajoute :
-   ```
-   http://localhost:3000/auth/callback
-   https://<ton-domaine>/auth/callback
-   ```
+Il marche sans rien configurer. Supabase limite fortement les envois par
+défaut : pour la production, branche un vrai expéditeur SMTP dans
+**Authentication → Emails**, sinon les liens partiront au compte-gouttes.
 
-Le lien magique par e-mail marche sans rien configurer, mais Supabase limite
-fortement les envois par défaut : pour la production, branche un vrai
-expéditeur SMTP dans **Authentication → Emails**.
+### Brancher Google, pas à pas
+
+Trois écrans, dans cet ordre. L'ordre compte : Supabase te donne l'URL que
+Google réclame.
+
+**1. Récupérer l'URL de rappel.** Supabase → **Authentication → Providers →
+Google**. Active-le. La page affiche une URL de rappel du type
+`https://<ton-projet>.supabase.co/auth/v1/callback`. Copie-la, laisse
+l'onglet ouvert.
+
+**2. Créer l'identifiant chez Google.**
+[console.cloud.google.com](https://console.cloud.google.com) :
+
+- Crée un projet si tu n'en as pas.
+- **APIs & Services → OAuth consent screen** : type *External*, remplis le nom
+  de l'application et l'e-mail de contact. Tant que l'écran est en *Testing*,
+  seuls les comptes que tu ajoutes en *Test users* peuvent se connecter —
+  c'est le piège classique. Passe-le en *Production* quand tu ouvres au
+  public.
+- **APIs & Services → Credentials → Create credentials → OAuth client ID**,
+  type *Web application*.
+- **Authorized redirect URIs** : colle l'URL de l'étape 1. **Celle de
+  Supabase, pas celle de ton site.**
+- Récupère *Client ID* et *Client secret*.
+
+**3. Recoller dans Supabase.** Retour sur l'onglet Providers → Google : colle
+les deux valeurs, enregistre.
+
+**4. Autoriser le retour vers ton site.** Supabase → **Authentication → URL
+Configuration → Redirect URLs** :
+
+```
+http://localhost:3000/auth/callback
+https://<ton-domaine>/auth/callback
+```
+
+Deux URL différentes, deux rôles distincts : celle de l'étape 2 dit à Google
+où renvoyer Supabase ; celle-ci dit à Supabase où il a le droit de te
+renvoyer. Oublier la seconde donne une connexion qui part et ne revient
+jamais.
+
+**5. Côté application.** `NEXT_PUBLIC_AUTH_PROVIDERS=google` et
+`NEXT_PUBLIC_SITE_URL=https://<ton-domaine>`, puis **redéploie**.
+
+### Brancher Microsoft
+
+Même logique, chez [entra.microsoft.com](https://entra.microsoft.com) →
+**App registrations → New registration** :
+
+- *Supported account types* : « Accounts in any organizational directory and
+  personal Microsoft accounts », sinon seuls les comptes de ton propre
+  annuaire pourront se connecter.
+- *Redirect URI* : plateforme **Web**, valeur = l'URL de rappel Supabase.
+- **Certificates & secrets → New client secret** : note la **valeur**, pas
+  l'identifiant. Elle n'est affichée qu'une fois.
+- Supabase → Providers → **Azure** : colle l'identifiant d'application et le
+  secret. Renseigne l'URL de l'annuaire si la page la demande.
+
+Puis `NEXT_PUBLIC_AUTH_PROVIDERS=google,azure` et redéploie.
 
 ### Choisir les autres moyens de connexion
 
@@ -227,8 +290,16 @@ absente, la clé refusée.
 
 | Symptôme | Cause probable |
 |---|---|
-| Tous les moteurs « non mesuré » | aucune clé dans `.env.local` |
+| **J'ai tout mis chez l'hébergeur et rien ne marche** | pas redéployé — les `NEXT_PUBLIC_*` sont figées au build |
+| Tous les moteurs « non mesuré » | aucune clé de moteur, ou pas redéployé |
 | L'audit n'est pas enregistré | schéma non appliqué, ou clé de service absente |
-| Le lien de connexion ne revient pas | URL de retour absente des *Redirect URLs* Supabase |
+| Aucun bouton de connexion | `NEXT_PUBLIC_AUTH_PROVIDERS` mise à vide, ou pas redéployé |
+| `redirect_uri_mismatch` chez Google | l'URI autorisée chez Google doit être celle de **Supabase**, pas celle de ton site |
+| « Access blocked » chez Google | écran de consentement encore en *Testing* : ajoute le compte en *Test user* ou passe en *Production* |
+| La connexion part et ne revient jamais | `https://<domaine>/auth/callback` absent des *Redirect URLs* Supabase |
+| Connecté mais compte sans e-mail | Microsoft sans la portée `email` — déjà demandée par le code, vérifie l'appli Entra |
 | « moteur momentanément indisponible » | clé refusée ou quota dépassé — le détail est dans les journaux du serveur |
 | Le plafond ne s'applique pas | Supabase non branché ; le serveur l'écrit dans ses journaux |
+
+En cas de doute, `npm run doctor -- https://ton-domaine` dit ce que le
+serveur voit réellement.

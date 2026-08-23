@@ -5,7 +5,12 @@
  * pour de vrai ? Chaque ligne dit ce qui va, ce qui ne va pas, et quoi faire.
  * Aucun test ne coûte d'argent : on n'interroge que des endpoints gratuits.
  *
- *   npm run doctor
+ *   npm run doctor                       lit .env.local
+ *   npm run doctor -- https://ton-site   interroge le déploiement
+ *
+ * La seconde forme existe parce que les variables vivent souvent chez
+ * l'hébergeur et pas sur la machine : sans elle, le diagnostic local dit que
+ * tout manque alors que le site en ligne fonctionne.
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -372,7 +377,108 @@ function checkOptional() {
 /* --- rapport -------------------------------------------------------------- */
 
 
+/** Interroge /api/sante d'un déploiement et rend le même rapport. */
+async function remote(target: string): Promise<boolean> {
+  const base = target.replace(/\/+$/, "");
+  const token = env.DIAGNOSTIC_TOKEN;
+  const url = `${base}/api/sante${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+
+  let payload: Record<string, never>;
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+    if (response.status === 404) {
+      console.log(
+        `\nLe diagnostic distant est désactivé : ajoute DIAGNOSTIC_TOKEN aux variables du déploiement, puis la même valeur dans ton .env.local.\n`,
+      );
+      return false;
+    }
+    if (response.status === 401) {
+      console.log("\nJeton refusé : DIAGNOSTIC_TOKEN local et distant diffèrent.\n");
+      return false;
+    }
+    if (!response.ok) {
+      console.log(`\n${base} répond ${response.status}.\n`);
+      return false;
+    }
+    payload = await response.json();
+  } catch (error) {
+    console.log(
+      `\nImpossible de joindre ${base} : ${error instanceof Error ? error.message : "erreur"}\n`,
+    );
+    return false;
+  }
+
+  const sb = payload["supabase"] as Record<string, never>;
+  const moteurs = payload["moteurs"] as Record<string, boolean>;
+  const co = payload["connexion"] as Record<string, never>;
+  const st = payload["stripe"] as Record<string, never>;
+
+  add(
+    payload["siteUrl"]
+      ? { level: "ok", label: "URL du site", detail: String(payload["siteUrl"]) }
+      : { level: "fail", label: "URL du site", detail: "NEXT_PUBLIC_SITE_URL absente", fix: "Les liens de connexion et les retours Stripe en dépendent." },
+  );
+
+  if (!sb?.["configure"]) {
+    add({ level: "fail", label: "Supabase", detail: "non configuré", fix: "Ajoute les variables Supabase au déploiement." });
+  } else if (!sb["cleDeService"]) {
+    add({ level: "fail", label: "Supabase", detail: "clé de service absente", fix: "SUPABASE_SERVICE_ROLE_KEY manque : rien ne sera enregistré." });
+  } else {
+    const manquantes = (sb["tablesManquantes"] ?? []) as string[];
+    add(
+      manquantes.length
+        ? { level: "fail", label: "Supabase — schéma", detail: `table(s) absente(s) : ${manquantes.join(", ")}`, fix: "Applique supabase/migrations/0001_init.sql dans l'éditeur SQL." }
+        : { level: "ok", label: "Supabase — schéma", detail: `${((sb["tables"] ?? []) as string[]).length} tables en place` },
+    );
+    add(
+      sb["compteur"]
+        ? { level: "ok", label: "Limite de débit", detail: "le compteur répond" }
+        : { level: "fail", label: "Limite de débit", detail: "fonction absente", fix: "Applique la migration : sans elle, aucun plafond." },
+    );
+  }
+
+  const fournisseurs = (co?.["fournisseurs"] ?? []) as string[];
+  add({
+    level: fournisseurs.length ? "ok" : "warn",
+    label: "Connexion",
+    detail: fournisseurs.length ? `${fournisseurs.join(", ")} + lien e-mail` : "lien e-mail uniquement",
+  });
+
+  for (const [id, label] of [["chatgpt", "ChatGPT"], ["claude", "Claude"], ["perplexity", "Perplexity"], ["gemini", "Gemini"]] as const) {
+    add(
+      moteurs?.[id]
+        ? { level: "ok", label, detail: "clé présente" }
+        : { level: "warn", label, detail: "pas de clé — « non mesuré »" },
+    );
+  }
+
+  if (!st?.["cle"]) {
+    add({ level: "warn", label: "Stripe", detail: "pas branché" });
+  } else if (!st["webhook"]) {
+    add({ level: "fail", label: "Stripe — webhook", detail: "secret absent : aucun achat marqué payé", fix: "Crée le webhook vers /api/stripe/webhook." });
+  } else {
+    add({ level: st["mode"] === "production" ? "warn" : "ok", label: "Stripe", detail: st["mode"] === "production" ? "clé de PRODUCTION" : "mode test, webhook configuré" });
+  }
+
+  add({
+    level: (payload["email"] as Record<string, boolean>)?.["resend"] ? "ok" : "warn",
+    label: "E-mails (Resend)",
+    detail: (payload["email"] as Record<string, boolean>)?.["resend"] ? "clé présente" : "pas encore branché",
+  });
+
+  return true;
+}
+
 async function main() {
+  const target = process.argv[2];
+  if (target?.startsWith("http")) {
+    console.log(`\nDiagnostic de ${target}`);
+    // Sans données, il ne faut surtout pas conclure : un rapport vide se lit
+    // « rien ne bloque », exactement l'inverse de la vérité.
+    if (await remote(target)) report();
+    return;
+  }
+
   if (!has("NEXT_PUBLIC_SUPABASE_URL") && !has("ANTHROPIC_API_KEY")) {
     console.log(
       "\nAucune configuration détectée. Copie .env.example en .env.local et remplis-le.\n",
@@ -382,7 +488,10 @@ async function main() {
   await checkSupabase();
   await checkEngines();
   checkOptional();
+  report();
+}
 
+function report() {
   console.log("");
   const mark = (l: Level) => (l === "ok" ? " OK  " : l === "warn" ? " -   " : "ÉCHEC");
   for (const c of checks) {
