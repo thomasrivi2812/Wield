@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isUuid } from "@/lib/uuid";
 import { CATALOG, isSku } from "@/lib/catalog";
 import { siteUrl } from "@/lib/env";
 import { getSession } from "@/lib/session";
@@ -48,7 +49,35 @@ export async function POST(request: Request) {
   }
 
   const product = CATALOG[body.sku];
-  const auditId = typeof body.auditId === "string" ? body.auditId : null;
+  const auditId =
+    typeof body.auditId === "string" && isUuid(body.auditId)
+      ? body.auditId
+      : null;
+
+  // Un achat rattaché à un audit doit l'être au bon : l'identifiant vient du
+  // navigateur, et il finit dans l'URL de retour.
+  if (auditId) {
+    const { data: audit } = await admin
+      .from("audits")
+      .select("id")
+      .eq("id", auditId)
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    if (!audit) {
+      return NextResponse.json(
+        {
+          error:
+            "Cet audit n’est pas rattaché à ton compte. Recharge la page de l’audit et réessaie.",
+        },
+        { status: 403 },
+      );
+    }
+  }
+
+  // Après paiement, on revient sur l'audit acheté — pas sur un espace membre
+  // où il faudrait le retrouver soi-même.
+  const returnTo = auditId ? `/audit/${auditId}` : "/espace";
 
   // La ligne est créée avant la redirection : le webhook doit pouvoir la
   // retrouver même si le client ferme son onglet en cours de paiement.
@@ -95,8 +124,8 @@ export async function POST(request: Request) {
           },
         },
       ],
-      success_url: `${siteUrl}/espace?achat=ok`,
-      cancel_url: `${siteUrl}/espace?achat=annule`,
+      success_url: `${siteUrl}${returnTo}?achat=ok`,
+      cancel_url: `${siteUrl}${returnTo}?achat=annule`,
     });
 
     if (!checkout.url) throw new Error("Stripe n’a pas renvoyé d’URL");

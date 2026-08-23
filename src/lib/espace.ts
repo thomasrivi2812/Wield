@@ -52,7 +52,7 @@ type Client = NonNullable<Awaited<ReturnType<typeof supabaseServer>>>;
 async function loadAudits(client: Client): Promise<Audit[]> {
   const { data, error } = await client
     .from("audits")
-    .select("created_at, query, cited_count, measured_count, tier, is_automatic")
+    .select("id, created_at, query, cited_count, measured_count, tier, is_automatic")
     .order("created_at", { ascending: false })
     .limit(20);
 
@@ -62,6 +62,7 @@ async function loadAudits(client: Client): Promise<Audit[]> {
   }
 
   return (data ?? []).map((row) => ({
+    id: row.id as string,
     date: DATE.format(new Date(row.created_at as string)),
     query: row.query as string,
     score: (row.cited_count as number | null) ?? 0,

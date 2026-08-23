@@ -137,7 +137,11 @@ function AuditsPanel({ audits }: { audits: EspaceData["audits"] }) {
           value={`${delta >= 0 ? "+" : ""}${delta}`}
           note={`sur ${audits.length} audit${audits.length > 1 ? "s" : ""}`}
         />
-        <Stat label="Prochain audit automatique" value="12 sept." note="inclus dans ton pack" />
+        <Stat
+          label="Moteurs mesurés au dernier audit"
+          value={latest.max > 0 ? String(latest.max) : "—"}
+          note={latest.max > 0 ? "moteurs réellement interrogés" : "aucun moteur interrogé"}
+        />
       </div>
 
       <div className="overflow-hidden rounded-md border border-line bg-surface">
@@ -166,7 +170,7 @@ function AuditsPanel({ audits }: { audits: EspaceData["audits"] }) {
             <tbody>
               {audits.map((audit) => (
                 <tr
-                  key={`${audit.date}-${audit.query}`}
+                  key={audit.id ?? `${audit.date}-${audit.query}`}
                   className="border-b border-line last:border-b-0"
                 >
                   <td className="whitespace-nowrap px-6 py-4 text-[0.9375rem] text-ink sm:px-8">
@@ -178,7 +182,16 @@ function AuditsPanel({ audits }: { audits: EspaceData["audits"] }) {
                     ) : null}
                   </td>
                   <td className="px-6 py-4 text-[0.9375rem] text-ink-soft">
-                    {audit.query}
+                    {audit.id ? (
+                      <a
+                        href={`/audit/${audit.id}`}
+                        className="text-cobalt underline decoration-line-strong underline-offset-2 hover:decoration-cobalt"
+                      >
+                        {audit.query}
+                      </a>
+                    ) : (
+                      audit.query
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-[0.875rem] text-ink-soft">
                     {audit.tier}

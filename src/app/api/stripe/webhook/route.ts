@@ -6,6 +6,13 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
+/** Ce que chaque achat change à la formule affichée sur l'audit. */
+const TIER_BY_SKU: Record<string, string> = {
+  report_geo: "report",
+  audit_seo_geo: "seo",
+  pack: "seo",
+};
+
 /**
  * Retour de Stripe.
  *
@@ -65,15 +72,30 @@ export async function POST(request: Request) {
 
   // `eq status pending` rend l'opération idempotente : Stripe rejoue parfois
   // le même événement, le second passage ne change rien.
-  const { error } = await admin
+  const { data: paid, error } = await admin
     .from("purchases")
     .update({ status: "paid", paid_at: new Date().toISOString() })
     .eq("id", purchaseId)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .select("sku, audit_id")
+    .maybeSingle();
 
   if (error) {
     console.error("[stripe] mise à jour de l’achat", error.message);
     return NextResponse.json({ error: "échec d’enregistrement" }, { status: 500 });
+  }
+
+  // La formule de l'audit suit l'achat : sans ça, l'historique de l'espace
+  // membre affiche « Score seul » sur un audit payé.
+  if (paid?.audit_id) {
+    const tier = TIER_BY_SKU[paid.sku as string];
+    if (tier) {
+      const { error: tierError } = await admin
+        .from("audits")
+        .update({ tier })
+        .eq("id", paid.audit_id);
+      if (tierError) console.error("[stripe] formule de l’audit", tierError.message);
+    }
   }
 
   return NextResponse.json({ received: true });

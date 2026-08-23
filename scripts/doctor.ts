@@ -190,6 +190,30 @@ async function checkSupabase() {
     add({ level: "ok", label: "Supabase — schéma", detail: `${tables.length} tables en place` });
   }
 
+  // La seconde migration est-elle passée ? Sans ces colonnes, l'audit tourne
+  // mais le scan technique et le rejeu sont impossibles — et le message
+  // d'erreur, lui, est incompréhensible.
+  if (!missing.length) {
+    try {
+      const r = await fetch(
+        `${url}/rest/v1/audits?select=domain,brand,seo_scan,seo_scanned_at&limit=0`,
+        { headers: head, signal: AbortSignal.timeout(10_000) },
+      );
+      if (r.ok) {
+        add({ level: "ok", label: "Supabase — schéma (2/2)", detail: "colonnes du scan technique en place" });
+      } else {
+        add({
+          level: "fail",
+          label: "Supabase — schéma (2/2)",
+          detail: "colonnes domain / seo_scan absentes de la table audits",
+          fix: "Applique supabase/migrations/0002_audit_seo.sql dans l'éditeur SQL.",
+        });
+      }
+    } catch {
+      add({ level: "warn", label: "Supabase — schéma (2/2)", detail: "vérification impossible" });
+    }
+  }
+
   // Le compteur de limite de débit répond-il ?
   try {
     const r = await fetch(`${url}/rest/v1/rpc/consume_rate_limit`, {

@@ -70,6 +70,7 @@ export async function POST(request: Request) {
 
   const auditId = await persist(
     result,
+    input,
     typeof anonId === "string" ? anonId : undefined,
   );
 
@@ -108,7 +109,11 @@ function publicDetail(status: string, detail: string): string {
   return status === "error" ? "moteur momentanément indisponible" : detail;
 }
 
-async function persist(result: AuditResult, anonId?: string): Promise<string | null> {
+async function persist(
+  result: AuditResult,
+  input: { brand?: string; domain?: string },
+  anonId?: string,
+): Promise<string | null> {
   const admin = supabaseAdmin();
   if (!admin) return null;
 
@@ -117,6 +122,8 @@ async function persist(result: AuditResult, anonId?: string): Promise<string | n
     .insert({
       anon_id: anonId ?? null,
       query: result.query,
+      brand: input.brand ?? null,
+      domain: input.domain ?? null,
       status: "done",
       cited_count: result.citedCount,
       measured_count: result.measuredCount,

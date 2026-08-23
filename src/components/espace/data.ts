@@ -7,6 +7,8 @@ export const ACCOUNT = {
 };
 
 export type Audit = {
+  /** Null pour les lignes de démonstration : rien à ouvrir. */
+  id: string | null;
   date: string;
   query: string;
   /** Moteurs qui citent la marque. */
@@ -19,6 +21,7 @@ export type Audit = {
 
 export const AUDITS: Audit[] = [
   {
+    id: null,
     date: "12 août 2026",
     query: "menuiserie industrielle, Lyon",
     score: 2,
@@ -27,6 +30,7 @@ export const AUDITS: Audit[] = [
     auto: true,
   },
   {
+    id: null,
     date: "12 juillet 2026",
     query: "menuiserie industrielle, Lyon",
     score: 1,
@@ -35,6 +39,7 @@ export const AUDITS: Audit[] = [
     auto: true,
   },
   {
+    id: null,
     date: "12 juin 2026",
     query: "agencement sur mesure hôtellerie",
     score: 1,
@@ -42,6 +47,7 @@ export const AUDITS: Audit[] = [
     tier: "Rapport GEO",
   },
   {
+    id: null,
     date: "28 mai 2026",
     query: "menuiserie industrielle, Lyon",
     score: 0,

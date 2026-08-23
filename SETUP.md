@@ -82,7 +82,11 @@ Colle-les dans `.env.local`.
 ### Créer les tables
 
 **SQL Editor → New query**, colle tout le contenu de
-`supabase/migrations/0001_init.sql`, **Run**.
+`supabase/migrations/0001_init.sql`, **Run**. Puis recommence avec
+`supabase/migrations/0002_audit_seo.sql`.
+
+Les deux scripts sont rejouables : si tu n'es pas sûr d'être allé au bout,
+recolle-les, ils ne casseront rien.
 
 Ça crée les tables, active RLS partout, et installe le compteur de limite de
 débit.
