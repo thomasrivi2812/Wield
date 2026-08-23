@@ -9,9 +9,11 @@ export const ACCOUNT = {
 export type Audit = {
   date: string;
   query: string;
+  /** Moteurs qui citent la marque. */
   score: number;
+  /** Moteurs réellement interrogés — jamais le nombre total de moteurs. */
   max: number;
-  tier: "Score seul" | "Rapport GEO" | "SEO + GEO";
+  tier: string;
   auto?: boolean;
 };
 
@@ -115,3 +117,30 @@ export const THREAD: Message[] = [
     body: "Gemini s’appuie beaucoup sur les signaux d’autorité externes. On te propose deux actions : faire citer tes certifications sur deux annuaires métier, et publier la page « capacité de production » qu’on a préparée. Je te mets le brouillon dans tes ressources.",
   },
 ];
+
+export type Account = typeof ACCOUNT;
+
+export type EspaceData = {
+  account: Account;
+  audits: Audit[];
+  resources: Resource[];
+  thread: Message[];
+  /** Vrai quand rien n'est branché : l'écran le signale. */
+  demo: boolean;
+};
+
+export const DEMO_ESPACE: EspaceData = {
+  account: ACCOUNT,
+  audits: AUDITS,
+  resources: RESOURCES,
+  thread: THREAD,
+  demo: true,
+};
+
+/** Libellés affichés pour les paliers stockés en base. */
+export const TIER_LABELS: Record<string, string> = {
+  free: "Score seul",
+  report: "Rapport GEO",
+  action: "Plan d’action",
+  seo: "SEO + GEO",
+};

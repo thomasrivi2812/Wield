@@ -7,6 +7,7 @@ import { IconCheck, IconCross } from "@/components/ui/icons";
 import { AuthPanel } from "./auth-panel";
 import { LockIcon, Masked, TierBadge } from "./lock";
 import { ACTIONS, PROMPTS, SEO_CHECKS } from "./data";
+import { anonId } from "@/lib/anon-id";
 import {
   isUnmeasured,
   requestAudit,
@@ -29,7 +30,7 @@ export function AuditFlow({
   useEffect(() => {
     const controller = new AbortController();
 
-    requestAudit({ query, domain }, controller.signal)
+    requestAudit({ query, domain, anonId: anonId() }, controller.signal)
       .then((data) => setState({ phase: "done", data }))
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -309,7 +310,7 @@ function ReportCard({
               </Masked>
             </div>
             <div className="min-w-0 lg:col-span-5">
-              <AuthPanel onSignedIn={onSignedIn} />
+              <AuthPanel next="/espace" onDemoSignIn={onSignedIn} />
             </div>
           </div>
         )}

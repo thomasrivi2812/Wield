@@ -6,7 +6,8 @@ import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { IconArrow, IconCheck } from "@/components/ui/icons";
 import { WieldMark } from "@/components/ui/icons";
-import { ACCOUNT, AUDITS, RESOURCES, THREAD, type Message } from "./data";
+import { signOut } from "@/app/auth/actions";
+import { DEMO_ESPACE, type EspaceData, type Message } from "./data";
 
 const TABS = [
   { id: "audits", label: "Mes audits" },
@@ -16,14 +17,22 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-export function Dashboard() {
+export function Dashboard({
+  data = DEMO_ESPACE,
+  claim,
+}: {
+  data?: EspaceData;
+  claim?: React.ReactNode;
+}) {
   const [tab, setTab] = useState<TabId>("audits");
 
   return (
     <div className="bg-bg">
       <Container>
         <div className="py-12 lg:py-16">
-          <AccountHeader />
+          {claim}
+
+          <AccountHeader account={data.account} demo={data.demo} />
 
           <div
             role="tablist"
@@ -53,9 +62,9 @@ export function Dashboard() {
           </div>
 
           <div className="pt-10">
-            {tab === "audits" ? <AuditsPanel /> : null}
-            {tab === "resources" ? <ResourcesPanel /> : null}
-            {tab === "chat" ? <ChatPanel /> : null}
+            {tab === "audits" ? <AuditsPanel audits={data.audits} /> : null}
+            {tab === "resources" ? <ResourcesPanel resources={data.resources} /> : null}
+            {tab === "chat" ? <ChatPanel thread={data.thread} /> : null}
           </div>
         </div>
       </Container>
@@ -63,7 +72,13 @@ export function Dashboard() {
   );
 }
 
-function AccountHeader() {
+function AccountHeader({
+  account,
+  demo,
+}: {
+  account: EspaceData["account"];
+  demo: boolean;
+}) {
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
       <div>
@@ -72,26 +87,40 @@ function AccountHeader() {
           Ton espace
         </p>
         <h1 className="mt-6 text-[2rem] leading-[1.06] sm:text-[2.5rem]">
-          {ACCOUNT.company}
+          {account.company}
         </h1>
         <p className="mt-3 text-[0.9375rem] text-ink-soft">
-          {ACCOUNT.name} · abonnement {ACCOUNT.plan}
+          {account.name} · {account.plan}
         </p>
       </div>
 
-      <Button href="/#test" size="md">
-        Lancer un nouvel audit
-        <IconArrow />
-      </Button>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        {demo ? null : (
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="text-[0.9375rem] text-ink-soft underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink"
+            >
+              Se déconnecter
+            </button>
+          </form>
+        )}
+        <Button href="/#test" size="md">
+          Lancer un nouvel audit
+          <IconArrow />
+        </Button>
+      </div>
     </div>
   );
 }
 
 /* ---------------------------------------------------------------- */
 
-function AuditsPanel() {
-  const latest = AUDITS[0];
-  const first = AUDITS[AUDITS.length - 1];
+function AuditsPanel({ audits }: { audits: EspaceData["audits"] }) {
+  if (audits.length === 0) return <EmptyAudits />;
+
+  const latest = audits[0];
+  const first = audits[audits.length - 1];
   const delta = latest.score - first.score;
 
   return (
@@ -102,11 +131,11 @@ function AuditsPanel() {
       className="flex flex-col gap-6"
     >
       <div className="grid gap-6 sm:grid-cols-3">
-        <Stat label="Dernier score" value={`${latest.score}/${latest.max}`} note={latest.date} accent />
+        <Stat label="Dernier score" value={latest.max > 0 ? `${latest.score}/${latest.max}` : "—"} note={latest.date} accent />
         <Stat
           label="Depuis le premier audit"
           value={`${delta >= 0 ? "+" : ""}${delta}`}
-          note={`sur ${AUDITS.length} audits`}
+          note={`sur ${audits.length} audit${audits.length > 1 ? "s" : ""}`}
         />
         <Stat label="Prochain audit automatique" value="12 sept." note="inclus dans ton pack" />
       </div>
@@ -135,7 +164,7 @@ function AuditsPanel() {
               </tr>
             </thead>
             <tbody>
-              {AUDITS.map((audit) => (
+              {audits.map((audit) => (
                 <tr
                   key={`${audit.date}-${audit.query}`}
                   className="border-b border-line last:border-b-0"
@@ -156,10 +185,20 @@ function AuditsPanel() {
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right sm:px-8">
                     <span className="font-display text-[1.0625rem] font-bold tabular-nums">
-                      <span className={audit.score > 0 ? "text-cobalt" : "text-absent"}>
-                        {audit.score}
-                      </span>
-                      <span className="text-absent">/{audit.max}</span>
+                      {audit.max > 0 ? (
+                        <>
+                          <span
+                            className={
+                              audit.score > 0 ? "text-cobalt" : "text-absent"
+                            }
+                          >
+                            {audit.score}
+                          </span>
+                          <span className="text-absent">/{audit.max}</span>
+                        </>
+                      ) : (
+                        <span className="text-absent">non mesuré</span>
+                      )}
                     </span>
                   </td>
                 </tr>
@@ -200,7 +239,9 @@ function Stat({
 
 /* ---------------------------------------------------------------- */
 
-function ResourcesPanel() {
+function ResourcesPanel({ resources }: { resources: EspaceData["resources"] }) {
+  if (resources.length === 0) return <EmptyResources />;
+
   return (
     <section
       role="tabpanel"
@@ -209,7 +250,7 @@ function ResourcesPanel() {
       className="overflow-hidden rounded-md border border-line bg-surface"
     >
       <ul className="divide-y divide-line">
-        {RESOURCES.map((resource) => (
+        {resources.map((resource) => (
           <li
             key={resource.title}
             className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:gap-6 sm:px-8"
@@ -249,8 +290,8 @@ function ResourcesPanel() {
 
 /* ---------------------------------------------------------------- */
 
-function ChatPanel() {
-  const [messages, setMessages] = useState<Message[]>(THREAD);
+function ChatPanel({ thread }: { thread: Message[] }) {
+  const [messages, setMessages] = useState<Message[]>(thread);
   const [draft, setDraft] = useState("");
 
   function send(event: React.FormEvent) {
@@ -354,5 +395,42 @@ function ChatPanel() {
         </div>
       </aside>
     </section>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+
+function Empty({ title, body }: { title: string; body: string }) {
+  return (
+    <section className="rounded-md border border-line bg-surface p-10 text-center">
+      <h2 className="text-[1.375rem] leading-snug">{title}</h2>
+      <p className="mx-auto mt-4 max-w-[46ch] text-[0.9375rem] leading-relaxed text-ink-soft">
+        {body}
+      </p>
+      <div className="mt-8 flex justify-center">
+        <Button href="/#test" size="md">
+          Lancer un audit
+          <IconArrow />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function EmptyAudits() {
+  return (
+    <Empty
+      title="Aucun audit pour l’instant"
+      body="Lance ton premier audit de visibilité : tu sauras en trente secondes quels moteurs de réponse citent ta boîte."
+    />
+  );
+}
+
+function EmptyResources() {
+  return (
+    <Empty
+      title="Aucune ressource pour l’instant"
+      body="Tes guides achetés et tes rapports d’audit apparaîtront ici, prêts à télécharger."
+    />
   );
 }

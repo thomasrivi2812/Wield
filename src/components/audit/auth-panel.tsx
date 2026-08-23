@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
+import { signInWithEmail, signInWithGoogle } from "@/app/auth/actions";
+import { supabaseBrowser } from "@/lib/supabase/client";
 
 /**
- * Mur de connexion du rapport gratuit.
+ * Mur de connexion.
+ *
+ * Quand Supabase est branché, les boutons font une vraie authentification.
+ * Sinon on garde le parcours de démonstration — et on le dit, plutôt que de
+ * laisser croire qu'un compte a été créé.
+ *
  * Marques en monochrome pour tenir la charte : avant mise en ligne, le bouton
  * Google doit repasser aux couleurs officielles imposées par Google.
  */
@@ -33,17 +40,6 @@ function GoogleMark() {
   );
 }
 
-function AppleMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[1.125rem] w-[1.125rem]">
-      <path
-        fill="currentColor"
-        d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.3.8-.7 0-1.7-.8-2.8-.8-1.5 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7s1.7.7 2.8.7 1.9-1 2.6-2a9 9 0 0 0 1.2-2.4c-.1 0-2.3-.9-2.3-3.3ZM14.2 6.2c.6-.7 1-1.7.9-2.7-.9 0-2 .6-2.6 1.3-.5.6-1 1.7-.9 2.6 1 .1 2-.5 2.6-1.2Z"
-      />
-    </svg>
-  );
-}
-
 function MailMark() {
   return (
     <svg
@@ -60,36 +56,44 @@ function MailMark() {
   );
 }
 
-const PROVIDERS = [
-  { id: "google", label: "Continuer avec Google", Mark: GoogleMark },
-  { id: "apple", label: "Continuer avec Apple", Mark: AppleMark },
-] as const;
+const BUTTON =
+  "flex h-12 items-center justify-center gap-3 rounded-sm border border-line-strong bg-surface font-display text-[0.9375rem] font-semibold text-ink transition-colors hover:border-ink hover:bg-bg";
 
-export function AuthPanel({ onSignedIn }: { onSignedIn: () => void }) {
+export function AuthPanel({
+  next = "/espace",
+  onDemoSignIn,
+  title = "Crée ton compte pour voir le rapport",
+  lede = "Gratuit, sans carte bancaire. Tu récupères les six prompts testés, qui est cité à ta place, et ton taux de citation moteur par moteur.",
+}: {
+  next?: string;
+  onDemoSignIn?: () => void;
+  title?: string;
+  lede?: string;
+}) {
+  const configured = supabaseBrowser() !== null;
   const [email, setEmail] = useState("");
+  const [state, submitEmail, pending] = useActionState(signInWithEmail, null);
 
   return (
     <div className="rounded-md border border-line bg-surface p-7 sm:p-9">
-      <h3 className="text-[1.375rem] leading-snug">
-        Crée ton compte pour voir le rapport
-      </h3>
-      <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-        Gratuit, sans carte bancaire. Tu récupères les six prompts testés, qui
-        est cité à ta place, et ton taux de citation moteur par moteur.
-      </p>
+      <h3 className="text-[1.375rem] leading-snug">{title}</h3>
+      <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">{lede}</p>
 
       <div className="mt-7 flex flex-col gap-3">
-        {PROVIDERS.map(({ id, label, Mark }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={onSignedIn}
-            className="flex h-12 items-center justify-center gap-3 rounded-sm border border-line-strong bg-surface font-display text-[0.9375rem] font-semibold text-ink transition-colors hover:border-ink hover:bg-bg"
-          >
-            <Mark />
-            {label}
+        {configured ? (
+          <form action={signInWithGoogle}>
+            <input type="hidden" name="next" value={next} />
+            <button type="submit" className={`${BUTTON} w-full`}>
+              <GoogleMark />
+              Continuer avec Google
+            </button>
+          </form>
+        ) : (
+          <button type="button" onClick={onDemoSignIn} className={BUTTON}>
+            <GoogleMark />
+            Continuer avec Google
           </button>
-        ))}
+        )}
 
         <div className="flex items-center gap-4 py-1">
           <span className="h-px flex-1 bg-line" />
@@ -98,12 +102,18 @@ export function AuthPanel({ onSignedIn }: { onSignedIn: () => void }) {
         </div>
 
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSignedIn();
-          }}
+          action={configured ? submitEmail : undefined}
+          onSubmit={
+            configured
+              ? undefined
+              : (e) => {
+                  e.preventDefault();
+                  onDemoSignIn?.();
+                }
+          }
           className="flex flex-col gap-3"
         >
+          <input type="hidden" name="next" value={next} />
           <label htmlFor="auth-email" className="sr-only">
             Ton adresse e-mail professionnelle
           </label>
@@ -114,6 +124,7 @@ export function AuthPanel({ onSignedIn }: { onSignedIn: () => void }) {
             <input
               id="auth-email"
               type="email"
+              name="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -123,15 +134,29 @@ export function AuthPanel({ onSignedIn }: { onSignedIn: () => void }) {
           </div>
           <button
             type="submit"
-            className="h-12 rounded-sm bg-cobalt px-6 font-display font-semibold text-white transition-colors hover:bg-cobalt-hover active:translate-y-px"
+            disabled={pending}
+            className="h-12 rounded-sm bg-cobalt px-6 font-display font-semibold text-white transition-colors hover:bg-cobalt-hover active:translate-y-px disabled:opacity-60"
           >
-            Recevoir mon lien de connexion
+            {pending ? "Envoi…" : "Recevoir mon lien de connexion"}
           </button>
         </form>
+
+        {state ? (
+          <p
+            role="status"
+            className={`text-[0.875rem] leading-relaxed ${
+              state.ok ? "text-cobalt" : "text-ink"
+            }`}
+          >
+            {state.message}
+          </p>
+        ) : null}
       </div>
 
       <p className="mt-6 text-[0.75rem] leading-relaxed text-ink-soft">
-        Aucune carte demandée, aucune donnée revendue. Désinscription en un clic.
+        {configured
+          ? "Aucune carte demandée, aucune donnée revendue. Désinscription en un clic."
+          : "Connexion non branchée sur ce déploiement : ce bouton déroule la démonstration."}
       </p>
     </div>
   );

@@ -27,7 +27,7 @@ export type AuditState =
   | { phase: "error"; message: string };
 
 export async function requestAudit(
-  input: { query: string; domain?: string },
+  input: { query: string; domain?: string; anonId?: string },
   signal?: AbortSignal,
 ): Promise<AuditView> {
   const response = await fetch("/api/audit", {

@@ -138,3 +138,35 @@ chatgpt.com ou claude.ai : c'est un substitut reproductible et comparable
 dans le temps, pas une capture d'écran de ce que verra un client donné.
 Le site doit le dire tel quel — c'est la moindre des choses pour une offre
 qui vend de la méthode plutôt que de la magie.
+
+### Authentification
+
+Supabase Auth, sans mot de passe : Google, ou un lien envoyé par e-mail.
+
+```
+src/lib/supabase/client.ts   client navigateur
+src/lib/supabase/server.ts   client serveur, adossé aux cookies
+src/middleware.ts            rafraîchit le jeton à chaque navigation
+src/app/auth/actions.ts      connexion, déconnexion, rattachement
+src/app/auth/callback/       retour OAuth et lien e-mail
+src/lib/safe-next.ts         filtre anti-redirection ouverte
+```
+
+La session est lue avec `getUser()`, jamais `getSession()` : le premier
+revalide le jeton auprès de Supabase, le second se contente de lire un cookie
+qu'un navigateur peut avoir falsifié.
+
+**Rattachement des audits.** Un visiteur peut lancer un audit avant d'avoir un
+compte. Le navigateur garde un identifiant local, joint à chaque audit ; à la
+première connexion, `/espace` réclame les audits encore orphelins portant cet
+identifiant, puis l'oublie. La réclamation passe par la clé de service : RLS
+interdit — volontairement — à un compte de s'attribuer une ligne qui ne lui
+appartient pas encore.
+
+**Côté Supabase**, il reste à activer le fournisseur Google et à déclarer
+l'URL de retour `https://<ton-domaine>/auth/callback` (et
+`http://localhost:3000/auth/callback` pour le développement).
+
+Sans clés Supabase, `/espace` affiche le compte de démonstration et le dit ;
+les boutons de connexion déroulent le parcours de maquette au lieu de laisser
+croire qu'un compte a été créé.
