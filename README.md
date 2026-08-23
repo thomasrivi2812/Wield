@@ -9,7 +9,7 @@ Cible : dirigeants de PME françaises.
 
 | Couche | Choix | Pourquoi |
 | --- | --- | --- |
-| Front | Next.js 15 (App Router), TypeScript | Rendu serveur obligatoire — un site qui n'apparaît qu'après exécution du JS est invisible pour GPTBot, ClaudeBot, PerplexityBot |
+| Front | Next.js 16 (App Router), TypeScript | Rendu serveur obligatoire — un site qui n'apparaît qu'après exécution du JS est invisible pour GPTBot, ClaudeBot, PerplexityBot |
 | Styles | Tailwind CSS v4 (tokens dans `src/app/globals.css`) | Design system tenu en un seul fichier |
 | Typo | Space Grotesk (titres) + Inter (corps), via `next/font` | Auto-hébergées, zéro requête tierce |
 | Rendu | SSG (toute la home est prérendue) | Crawlable, rapide, citable |
