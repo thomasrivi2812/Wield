@@ -41,7 +41,7 @@ export function SiteHeader() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
+                  className="link-rule text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
                 >
                   {item.label}
                 </Link>
@@ -60,7 +60,7 @@ export function SiteHeader() {
           <div className="hidden items-center gap-5 lg:flex">
             <Link
               href="/espace"
-              className="text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
+              className="link-rule text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
             >
               Se connecter
             </Link>

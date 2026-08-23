@@ -105,7 +105,14 @@ async function runEngine(
         sources: answer.sources,
         ...verdict,
       });
-      notify({ type: "prompt", engine: adapter.id, index, cited: verdict.cited });
+      notify({
+        type: "prompt",
+        engine: adapter.id,
+        index,
+        cited: verdict.cited,
+        // Trois suffisent à l'écran, et la ligne du flux reste courte.
+        winners: verdict.winners.slice(0, 3),
+      });
     }
 
     const citedCount = results.filter((r) => r.cited).length;

@@ -87,6 +87,9 @@ export type AuditProgress =
       /** Index de la question, à partir de 0. */
       index: number;
       cited: boolean;
+      /** Domaines cités sur cette question. C'est le cœur du spectacle :
+       *  on voit les concurrents sortir pendant que la marque n'y est pas. */
+      winners: string[];
     }
   | {
       type: "engine";

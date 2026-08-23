@@ -29,8 +29,8 @@ test("le départ fixe le nombre de questions et les moteurs", () => {
 test("chaque réponse s'ajoute au bon moteur, dans l'ordre", () => {
   const state = run(
     start,
-    { type: "prompt", engine: "chatgpt", index: 0, cited: false },
-    { type: "prompt", engine: "chatgpt", index: 1, cited: true },
+    { type: "prompt", engine: "chatgpt", index: 0, cited: false, winners: ["concurrent-a.fr"] },
+    { type: "prompt", engine: "chatgpt", index: 1, cited: true, winners: ["www.Concurrent-A.fr", "pagesjaunes.fr"] },
   );
   assert.deepEqual(state.engines[0].answers, [false, true]);
   assert.deepEqual(state.engines[1].answers, []);
@@ -39,7 +39,7 @@ test("chaque réponse s'ajoute au bon moteur, dans l'ordre", () => {
 test("le verdict d'un moteur n'efface pas ses réponses", () => {
   const state = run(
     start,
-    { type: "prompt", engine: "chatgpt", index: 0, cited: true },
+    { type: "prompt", engine: "chatgpt", index: 0, cited: true, winners: [] },
     { type: "engine", engine: "chatgpt", status: "cited", detail: "2ᵉ source" },
   );
   assert.deepEqual(state.engines[0].answers, [true]);
@@ -52,6 +52,7 @@ test("un moteur inconnu dans le flux ne casse rien", () => {
     engine: "perplexity",
     index: 0,
     cited: true,
+    winners: [],
   });
   assert.deepEqual(state.engines.map((e) => e.answers.length), [0, 0]);
 });
@@ -95,4 +96,32 @@ test("une panne réseau, hors flux, mène au même écran", () => {
   const state = run(start, { type: "failed", message: "réseau coupé" });
   assert.equal(state.phase, "error");
   assert.equal(state.message, "réseau coupé");
+});
+
+test("les domaines cités s'accumulent, normalisés et comptés", () => {
+  const state = run(
+    start,
+    { type: "prompt", engine: "chatgpt", index: 0, cited: false, winners: ["concurrent-a.fr"] },
+    {
+      type: "prompt",
+      engine: "chatgpt",
+      index: 1,
+      cited: true,
+      winners: ["www.Concurrent-A.fr", "pagesjaunes.fr"],
+    },
+  );
+
+  // « www.Concurrent-A.fr » et « concurrent-a.fr » sont le même domaine.
+  assert.deepEqual(state.domains, { "concurrent-a.fr": 2, "pagesjaunes.fr": 1 });
+});
+
+test("aucun domaine cité : le tableau reste vide, on n'invente pas de nom", () => {
+  const state = run(start, {
+    type: "prompt",
+    engine: "chatgpt",
+    index: 0,
+    cited: false,
+    winners: [],
+  });
+  assert.deepEqual(state.domains, {});
 });

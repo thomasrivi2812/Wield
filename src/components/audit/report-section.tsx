@@ -112,7 +112,10 @@ function PromptTable({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.prompt} className="border-b border-line last:border-b-0">
+            <tr
+              key={row.prompt}
+              className="row-hover border-b border-line last:border-b-0"
+            >
               <td className="max-w-[26rem] py-4 pr-6 text-[0.9375rem] leading-snug text-ink">
                 {row.prompt}
               </td>

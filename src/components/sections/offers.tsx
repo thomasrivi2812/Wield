@@ -95,8 +95,8 @@ function OfferCard({ offer }: { offer: Offer }) {
     <article
       className={
         dark
-          ? "relative flex w-full flex-col rounded-md border border-slate bg-slate p-8 text-ink-invert lg:-mt-4 lg:p-10 lg:pb-10 shadow-[0_28px_70px_-40px_rgba(21,23,28,0.6)]"
-          : "relative flex w-full flex-col rounded-md border border-line bg-surface p-8 lg:p-10"
+          ? "card-lift card-lift-invert relative flex w-full flex-col rounded-md border border-slate bg-slate p-8 text-ink-invert lg:-mt-4 lg:p-10 lg:pb-10 shadow-[0_28px_70px_-40px_rgba(21,23,28,0.6)]"
+          : "card-lift relative flex w-full flex-col rounded-md border border-line bg-surface p-8 lg:p-10"
       }
     >
       <div className="flex items-center justify-between gap-4">

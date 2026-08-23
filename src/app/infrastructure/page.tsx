@@ -94,7 +94,7 @@ export default function InfrastructurePage() {
                   as="li"
                   key={step.title}
                   delay={i * 90}
-                  className="rounded-md border border-line bg-surface p-7 lg:p-8"
+                  className="card-lift rounded-md border border-line bg-surface p-7 lg:p-8"
                 >
                   <h3 className="text-[1.25rem] leading-snug">{step.title}</h3>
                   <p className="mt-3 text-[0.9375rem] leading-[1.6] text-ink-soft">

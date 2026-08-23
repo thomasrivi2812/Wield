@@ -171,7 +171,7 @@ function AuditsPanel({ audits }: { audits: EspaceData["audits"] }) {
               {audits.map((audit) => (
                 <tr
                   key={audit.id ?? `${audit.date}-${audit.query}`}
-                  className="border-b border-line last:border-b-0"
+                  className="row-hover border-b border-line last:border-b-0"
                 >
                   <td className="whitespace-nowrap px-6 py-4 text-[0.9375rem] text-ink sm:px-8">
                     {audit.date}

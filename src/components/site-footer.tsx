@@ -125,7 +125,7 @@ export function SiteFooter({ showInfra = true }: { showInfra?: boolean }) {
                     <li key={link.label}>
                       <Link
                         href={link.href}
-                        className="text-[0.9375rem] text-ink-invert transition-colors hover:text-cobalt-light"
+                        className="link-rule text-[0.9375rem] text-ink-invert transition-colors hover:text-cobalt-light"
                       >
                         {link.label}
                       </Link>
@@ -145,7 +145,7 @@ export function SiteFooter({ showInfra = true }: { showInfra?: boolean }) {
             <span aria-hidden="true" className="h-3 w-px bg-line-invert" />
             <span>Hébergement et données en Europe</span>
             <span aria-hidden="true" className="h-3 w-px bg-line-invert" />
-            <Link href="#" className="transition-colors hover:text-ink-invert">
+            <Link href="#" className="link-rule transition-colors hover:text-ink-invert">
               Confidentialité
             </Link>
           </p>

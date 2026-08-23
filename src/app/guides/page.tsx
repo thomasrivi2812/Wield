@@ -55,7 +55,7 @@ export default function GuidesPage() {
                     as="li"
                     key={sku}
                     delay={GUIDE_SKUS.indexOf(sku) * 70}
-                    className="flex flex-col rounded-md border border-line bg-surface p-7 transition-colors hover:border-line-strong"
+                    className="card-lift flex flex-col rounded-md border border-line bg-surface p-7"
                   >
                     <p className="eyebrow text-absent">{KINDS[sku]}</p>
 

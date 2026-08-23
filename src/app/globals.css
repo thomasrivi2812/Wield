@@ -164,6 +164,67 @@
     opacity: 1;
     transform: translate3d(0, 0, 0);
   }
+
+  /*
+   * Survol. Deux gestes seulement, réutilisés partout, pour que le site
+   * réponde sans se mettre à gigoter.
+   */
+
+  /* Une carte se soulève de deux pixels et son trait se précise. */
+  .card-lift {
+    transition:
+      transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 260ms ease,
+      box-shadow 260ms ease;
+  }
+
+  .card-lift:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: var(--color-line-strong);
+    box-shadow: 0 18px 40px -28px rgba(21, 23, 28, 0.35);
+  }
+
+  /* Sur ardoise, la même chose : l'ombre ne se verrait pas, le trait si. */
+  .card-lift-invert:hover {
+    border-color: rgba(246, 247, 249, 0.28);
+  }
+
+  /*
+   * Un lien : le filet de cobalt se tire de la gauche. C'est le même geste
+   * que le soulignement des mots-clés dans les titres — un trait tiré à la
+   * règle, pas un effet.
+   */
+  .link-rule {
+    position: relative;
+  }
+
+  .link-rule::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.25rem;
+    height: 1.5px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .link-rule:hover::after,
+  .link-rule:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* Une ligne de tableau qui se détache doucement au passage. */
+  .row-hover {
+    transition: background-color 200ms ease;
+  }
+
+  .row-hover:hover {
+    background-color: var(--color-bg);
+  }
+
 }
 
 @layer components {
@@ -206,6 +267,16 @@
   .reveal {
     opacity: 1;
     transform: none;
+  }
+  .card-lift:hover {
+    transform: none;
+  }
+  .link-rule::after {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+  .link-rule:hover::after {
+    opacity: 1;
   }
   *,
   *::before,
