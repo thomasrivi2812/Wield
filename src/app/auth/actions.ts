@@ -6,6 +6,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { safeNext } from "@/lib/safe-next";
 import { PROVIDERS, enabledProviders, isProviderId } from "@/lib/auth-providers";
+import { explainAuthError } from "@/lib/auth-errors";
 
 export type AuthResult = { ok: boolean; message: string };
 
@@ -37,11 +38,10 @@ export async function signInWithEmail(
   });
 
   if (error) {
-    console.error("[auth] lien e-mail", error.message);
-    return {
-      ok: false,
-      message: "L’envoi a échoué. Réessaie dans un instant.",
-    };
+    // Le journal garde le message brut du fournisseur ; l'écran reçoit une
+    // version qui dit quoi corriger.
+    console.error("[auth] lien e-mail", error.code ?? error.status, error.message);
+    return { ok: false, message: explainAuthError(error).message };
   }
 
   return {

@@ -245,6 +245,60 @@ async function checkSupabase() {
     });
   }
 
+  // Les réglages d'authentification, tels que Supabase les applique vraiment.
+  // C'est la seule façon de voir depuis l'extérieur qu'un fournisseur déclaré
+  // dans NEXT_PUBLIC_AUTH_PROVIDERS n'est pas activé côté Supabase — le cas
+  // qui donne un bouton menant à une erreur.
+  try {
+    const r = await fetch(`${url}/auth/v1/settings`, {
+      headers: { apikey: anon },
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (r.ok) {
+      const settings = (await r.json()) as {
+        disable_signup?: boolean;
+        external?: Record<string, boolean>;
+      };
+
+      if (settings.disable_signup) {
+        add({
+          level: "fail",
+          label: "Inscription",
+          detail: "la création de compte est désactivée",
+          fix: "Supabase → Authentication → Sign In / Providers → active « Allow new users to sign up ». Sans ça, le lien e-mail échoue pour toute nouvelle adresse.",
+        });
+      } else {
+        add({ level: "ok", label: "Inscription", detail: "création de compte autorisée" });
+      }
+
+      const declared = (process.env.NEXT_PUBLIC_AUTH_PROVIDERS ?? "google")
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+      const inactive = declared.filter((p) => settings.external?.[p] !== true);
+
+      if (inactive.length) {
+        add({
+          level: "fail",
+          label: "Fournisseurs de connexion",
+          detail: `déclaré(s) dans l'application mais pas activé(s) dans Supabase : ${inactive.join(", ")}`,
+          fix: "Supabase → Authentication → Providers : active-les, ou retire-les de NEXT_PUBLIC_AUTH_PROVIDERS. Un bouton qui mène à une erreur fait croire que le site est cassé.",
+        });
+      } else if (declared.length) {
+        add({
+          level: "ok",
+          label: "Fournisseurs de connexion",
+          detail: `${declared.join(", ")} — activé(s) des deux côtés`,
+        });
+      }
+    } else {
+      add({ level: "warn", label: "Réglages d'authentification", detail: `réponse ${r.status}` });
+    }
+  } catch {
+    add({ level: "warn", label: "Réglages d'authentification", detail: "vérification impossible" });
+  }
+
   // RLS : un client anonyme ne doit rien lire.
   try {
     const r = await fetch(`${url}/rest/v1/audits?select=id&limit=1`, {
