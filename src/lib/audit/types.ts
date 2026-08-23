@@ -33,6 +33,8 @@ export type EngineResult = {
   detail: string;
   latencyMs: number | null;
   prompts: PromptResult[];
+  /** Cumul sur les six questions. Absent si le moteur n'a rien renvoyé. */
+  usage?: Usage;
 };
 
 export type AuditInput = {
@@ -51,11 +53,32 @@ export type AuditResult = AuditInput & {
   measuredCount: number;
   engines: EngineResult[];
   prompts: string[];
+  /** Coût total de l'audit, null si aucun tarif n'est connu. */
+  costUsd: number | null;
+};
+
+/**
+ * Ce qu'a coûté une réponse.
+ *
+ * Les jetons sont toujours mesurés — les quatre SDK les renvoient. Le coût en
+ * dollars n'est renseigné que quand le fournisseur le facture lui-même dans sa
+ * réponse (Perplexity le fait) ; sinon il est calculé à partir du tarif
+ * configuré, et vaut null tant qu'aucun tarif n'est renseigné. On ne devine
+ * jamais un prix.
+ */
+export type Usage = {
+  inputTokens: number;
+  outputTokens: number;
+  /** Recherches web facturées à l'unité par certains fournisseurs. */
+  searches: number;
+  /** Coût facturé par le fournisseur, quand il le communique. */
+  billedUsd: number | null;
 };
 
 export type EngineAnswer = {
   text: string;
   sources: Source[];
+  usage?: Usage;
 };
 
 export type EngineAdapter = {

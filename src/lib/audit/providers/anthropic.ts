@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { parseAnthropic } from "./parse";
+import { anthropicUsage, parseAnthropic } from "./parse";
 import { engineKeys } from "@/lib/env";
 import type { EngineAdapter, EngineAnswer } from "../types";
 
@@ -61,7 +61,7 @@ export function anthropicAdapter(): EngineAdapter {
         { signal },
       );
 
-      return parseAnthropic(response.content);
+      return { ...parseAnthropic(response.content), usage: anthropicUsage(response) };
     },
   };
 }

@@ -1,6 +1,6 @@
 import Perplexity from "@perplexity-ai/perplexity_ai";
 import { engineKeys } from "@/lib/env";
-import { parsePerplexity } from "./parse";
+import { parsePerplexity, perplexityUsage } from "./parse";
 import type { EngineAdapter, EngineAnswer } from "../types";
 
 /** Perplexity est le moteur le plus proche de son produit grand public : sa
@@ -43,7 +43,7 @@ export function perplexityAdapter(): EngineAdapter {
         { signal },
       );
 
-      return parsePerplexity(response);
+      return { ...parsePerplexity(response), usage: perplexityUsage(response) };
     },
   };
 }

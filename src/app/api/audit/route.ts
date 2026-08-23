@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { costOf } from "@/lib/audit/cost";
 import { runAudit } from "@/lib/audit/run";
 import { PROMPTS_PER_AUDIT } from "@/lib/audit/prompts";
 import { clientIp, consume } from "@/lib/rate-limit";
@@ -169,6 +170,7 @@ async function persist(
       status: "done",
       cited_count: result.citedCount,
       measured_count: result.measuredCount,
+      cost_usd: result.costUsd,
       completed_at: new Date().toISOString(),
     })
     .select("id")
@@ -188,6 +190,10 @@ async function persist(
       status: engine.status,
       detail: engine.detail,
       latency_ms: engine.latencyMs,
+      input_tokens: engine.usage?.inputTokens ?? null,
+      output_tokens: engine.usage?.outputTokens ?? null,
+      searches: engine.usage?.searches ?? null,
+      cost_usd: costOf(engine.engine, engine.usage),
     })),
   );
 

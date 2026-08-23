@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { parseOpenAI } from "./parse";
+import { openaiUsage, parseOpenAI } from "./parse";
 import { engineKeys } from "@/lib/env";
 import type { EngineAdapter, EngineAnswer } from "../types";
 
@@ -48,7 +48,7 @@ export function openaiAdapter(): EngineAdapter {
         { signal },
       );
 
-      return parseOpenAI(response);
+      return { ...parseOpenAI(response), usage: openaiUsage(response) };
     },
   };
 }

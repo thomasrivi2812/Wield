@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { parseGemini } from "./parse";
+import { geminiUsage, parseGemini } from "./parse";
 import { engineKeys } from "@/lib/env";
 import type { EngineAdapter, EngineAnswer } from "../types";
 
@@ -37,7 +37,7 @@ export function geminiAdapter(): EngineAdapter {
         },
       });
 
-      return parseGemini(response);
+      return { ...parseGemini(response), usage: geminiUsage(response) };
     },
   };
 }

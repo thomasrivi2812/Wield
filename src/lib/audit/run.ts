@@ -1,6 +1,8 @@
+import { auditCost, sumUsage } from "./cost";
 import { detectCitation } from "./detect";
 import { buildPrompts } from "./prompts";
 import type {
+  Usage as AuditUsage,
   AuditInput,
   AuditResult,
   EngineAdapter,
@@ -61,6 +63,7 @@ export async function runAudit(
     measuredCount: measured.length,
     engines,
     prompts,
+    costUsd: auditCost(engines).totalUsd,
   };
 }
 
@@ -91,6 +94,8 @@ async function runEngine(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), ENGINE_TIMEOUT_MS);
 
+  const spent: Array<AuditUsage | undefined> = [];
+
   try {
     const results: PromptResult[] = [];
 
@@ -105,6 +110,7 @@ async function runEngine(
         sources: answer.sources,
         ...verdict,
       });
+      spent.push(answer.usage);
       notify({
         type: "prompt",
         engine: adapter.id,
@@ -123,6 +129,7 @@ async function runEngine(
       status: citedCount > 0 ? "cited" : "absent",
       latencyMs: Date.now() - started,
       prompts: results,
+      usage: spent.some(Boolean) ? sumUsage(spent) : undefined,
       detail:
         citedCount === 0
           ? "aucune mention"
@@ -138,6 +145,8 @@ async function runEngine(
       status: "error",
       latencyMs: Date.now() - started,
       detail: error instanceof Error ? error.message : "erreur inconnue",
+      // Une panne au bout de quatre questions a déjà coûté quatre appels.
+      usage: spent.some(Boolean) ? sumUsage(spent) : undefined,
     };
     // Le message du fournisseur est la seule chose qui explique la panne :
     // il part dans les journaux de l'hébergeur et reste en base. Le

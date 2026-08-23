@@ -63,6 +63,7 @@ export async function GET(request: Request) {
       variableRenseignee: process.env.NEXT_PUBLIC_AUTH_PROVIDERS !== undefined,
     },
     moteurs: await checkEngines(),
+    couts: await checkCosts(),
     stripe: {
       cle: stripe.configured,
       webhook: Boolean(stripe.webhookSecret),
@@ -126,6 +127,44 @@ async function checkEngines() {
   }
 
   return etat;
+}
+
+/**
+ * Ce que les audits ont coûté.
+ *
+ * C'est le chiffre qui décide du prix de vente. On donne la moyenne et le pire
+ * cas sur les cinquante derniers audits chiffrés : la moyenne pour la marge,
+ * le maximum parce que c'est lui qui fait mal quand quelqu'un enchaîne.
+ */
+async function checkCosts() {
+  const admin = supabaseAdmin();
+  if (!admin) return { chiffres: 0 };
+
+  const { data } = await admin
+    .from("audits")
+    .select("cost_usd, measured_count")
+    .not("cost_usd", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const couts = (data ?? [])
+    .map((row) => Number(row.cost_usd))
+    .filter((value) => Number.isFinite(value));
+
+  if (couts.length === 0) {
+    return {
+      chiffres: 0,
+      note: "aucun audit chiffré : renseigne les tarifs des moteurs (PRICE_*)",
+    };
+  }
+
+  const total = couts.reduce((sum, value) => sum + value, 0);
+  return {
+    chiffres: couts.length,
+    moyenUsd: Number((total / couts.length).toFixed(4)),
+    maxUsd: Number(Math.max(...couts).toFixed(4)),
+    minUsd: Number(Math.min(...couts).toFixed(4)),
+  };
 }
 
 async function checkSupabase() {

@@ -322,3 +322,33 @@ absente, la clé refusée.
 
 En cas de doute, `npm run doctor -- https://ton-domaine` dit ce que le
 serveur voit réellement.
+
+---
+
+## Ce que coûte un audit
+
+Le coût est **mesuré**, pas estimé : chaque audit enregistre les jetons
+consommés par moteur et son coût total dans `audits.cost_usd`.
+
+Les jetons sont toujours exacts — les quatre SDK les renvoient. Les tarifs, eux,
+doivent être renseignés, sauf pour Perplexity qui facture dans sa réponse et
+pour Anthropic dont le tarif par défaut est connu.
+
+| Variable | Ce qu'elle vaut |
+|---|---|
+| `PRICE_OPENAI_INPUT` / `_OUTPUT` | dollars par million de jetons |
+| `PRICE_GOOGLE_INPUT` / `_OUTPUT` | idem |
+| `PRICE_ANTHROPIC_INPUT` / `_OUTPUT` | défaut 5 / 25 |
+| `PRICE_ANTHROPIC_SEARCH` | dollars par recherche web |
+
+Tant qu'un tarif manque, le moteur concerné sort en **« non chiffré »** — jamais
+en zéro. Un audit qui coûterait 1 € affiché à 0 € conduirait à vendre à perte.
+
+Une fois les tarifs renseignés :
+
+```bash
+npm run doctor -- https://ton-site.com
+```
+
+affiche la moyenne et le pire cas sur les cinquante derniers audits. C'est ce
+chiffre-là qui fixe le prix de vente, pas une estimation.

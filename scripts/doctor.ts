@@ -609,6 +609,24 @@ async function remote(target: string): Promise<boolean> {
     }
   }
 
+  const couts = payload["couts"] as Record<string, number | string> | undefined;
+  if (couts) {
+    if (!couts["chiffres"]) {
+      add({
+        level: "warn",
+        label: "Coût par audit",
+        detail: "aucun audit chiffré",
+        fix: "Renseigne les tarifs des moteurs (PRICE_OPENAI_INPUT, PRICE_GOOGLE_INPUT, …) pour que le coût se calcule. Sans eux, tu vends au jugé.",
+      });
+    } else {
+      add({
+        level: "ok",
+        label: "Coût par audit",
+        detail: `moyenne ${couts["moyenUsd"]} $ · pire cas ${couts["maxUsd"]} $ (sur ${couts["chiffres"]} audits chiffrés)`,
+      });
+    }
+  }
+
   if (!st?.["cle"]) {
     add({ level: "warn", label: "Stripe", detail: "pas branché" });
   } else if (!st["webhook"]) {

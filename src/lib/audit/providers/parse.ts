@@ -3,7 +3,8 @@ import type { GenerateContentResponse } from "@google/genai";
 import type PerplexityClient from "@perplexity-ai/perplexity_ai";
 import type { Response as OpenAIResponse } from "openai/resources/responses/responses";
 import { toDomain } from "../detect";
-import type { EngineAnswer, Source } from "../types";
+import type { EngineAnswer, Source, Usage } from "../types";
+import type { Message } from "@anthropic-ai/sdk/resources/messages";
 
 /**
  * Lecture des réponses, un fournisseur par fonction.
@@ -114,4 +115,66 @@ export function parseGemini(response: GenerateContentResponse): EngineAnswer {
   }
 
   return { text: response.text ?? "", sources: out.sources };
+}
+
+
+/* ------------------------------------------------------------------
+   Consommation
+   Chaque fournisseur nomme ses champs autrement, et deux d'entre eux
+   rendent les leurs facultatifs. Un champ absent vaut 0 jeton mesuré,
+   jamais une invention.
+------------------------------------------------------------------- */
+
+const NOTHING: Usage = {
+  inputTokens: 0,
+  outputTokens: 0,
+  searches: 0,
+  billedUsd: null,
+};
+
+export function anthropicUsage(response: Message): Usage {
+  return {
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+    searches: response.usage.server_tool_use?.web_search_requests ?? 0,
+    billedUsd: null,
+  };
+}
+
+export function openaiUsage(response: OpenAIResponse): Usage {
+  const usage = response.usage;
+  if (!usage) return NOTHING;
+  return {
+    inputTokens: usage.input_tokens,
+    outputTokens: usage.output_tokens,
+    // Les recherches web ne sont pas comptées séparément dans cette réponse.
+    searches: 0,
+    billedUsd: null,
+  };
+}
+
+/** Perplexity facture dans sa réponse : on prend son chiffre, pas le nôtre. */
+export function perplexityUsage(response: PerplexityCompletion): Usage {
+  const usage = response.usage;
+  if (!usage) return NOTHING;
+  return {
+    inputTokens: usage.prompt_tokens,
+    outputTokens: usage.completion_tokens,
+    searches: usage.num_search_queries ?? 0,
+    billedUsd: usage.cost?.total_cost ?? null,
+  };
+}
+
+export function geminiUsage(response: GenerateContentResponse): Usage {
+  const usage = response.usageMetadata;
+  if (!usage) return NOTHING;
+  return {
+    // Le raisonnement est facturé comme de la sortie : l'ignorer sous-estimerait
+    // la note.
+    inputTokens: usage.promptTokenCount ?? 0,
+    outputTokens:
+      (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0),
+    searches: 0,
+    billedUsd: null,
+  };
 }
