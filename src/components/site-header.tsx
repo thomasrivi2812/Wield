@@ -9,8 +9,19 @@ import { Button } from "@/components/ui/button";
 const NAV = [
   { label: "Le GEO", href: "/#geo" },
   { label: "Offres", href: "/#offres" },
-  { label: "Guides", href: "/#guides" },
+  { label: "Guides", href: "/guides" },
 ];
+
+function SparkIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className={className}>
+      <path
+        d="M8 1.5 9.4 6l4.6 1.4L9.4 8.8 8 13.4 6.6 8.8 2 7.4 6.6 6 8 1.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -18,30 +29,40 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-bg/85 backdrop-blur-md">
       <Container>
-        <div className="flex h-[4.5rem] items-center justify-between gap-8">
-          <Logo />
+        <div className="flex h-[4.5rem] items-center justify-between gap-6">
+          <div className="flex items-center gap-8">
+            <Logo />
 
-          <nav
-            aria-label="Navigation principale"
-            className="hidden items-center gap-8 lg:flex"
-          >
-            {NAV.map((item) => (
+            <nav
+              aria-label="Navigation principale"
+              className="hidden items-center gap-7 lg:flex"
+            >
+              {NAV.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
+                >
+                  {item.label}
+                </Link>
+              ))}
+
               <Link
-                key={item.label}
-                href={item.href}
-                className="text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
+                href="/quiz"
+                className="group inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface px-4 py-1.5 text-[0.875rem] text-ink transition-colors hover:border-cobalt hover:text-cobalt"
               >
-                {item.label}
+                <SparkIcon className="h-3.5 w-3.5 text-cobalt" />
+                Où en est ta boîte avec l&apos;IA&nbsp;?
               </Link>
-            ))}
-          </nav>
+            </nav>
+          </div>
 
           <div className="hidden items-center gap-5 lg:flex">
             <Link
-              href="/#brief"
+              href="/espace"
               className="text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
             >
-              Recevoir la veille
+              Se connecter
             </Link>
             <Button href="/#test" size="md">
               Audit gratuit
@@ -92,6 +113,21 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              href="/quiz"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 py-2.5 font-display text-lg font-medium text-cobalt"
+            >
+              <SparkIcon className="h-4 w-4" />
+              Où en est ta boîte avec l&apos;IA&nbsp;?
+            </Link>
+            <Link
+              href="/espace"
+              onClick={() => setOpen(false)}
+              className="py-2.5 font-display text-lg font-medium"
+            >
+              Se connecter
+            </Link>
             <Button href="/#test" size="lg" className="mt-4 w-full">
               Audit de visibilité IA — gratuit
             </Button>

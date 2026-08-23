@@ -11,6 +11,7 @@ type Offer = {
   format: string;
   points: string[];
   cta: string;
+  href: string;
   featured?: boolean;
 };
 
@@ -27,6 +28,7 @@ const OFFERS: Offer[] = [
       "Rapport mensuel, IA par IA",
     ],
     cta: "Demander l'audit gratuit",
+    href: "/#test",
     featured: true,
   },
   {
@@ -41,6 +43,7 @@ const OFFERS: Offer[] = [
       "Formation courte, en situation",
     ],
     cta: "Parler d'un accompagnement",
+    href: "/quiz",
   },
   {
     badge: "L'entrée",
@@ -54,6 +57,7 @@ const OFFERS: Offer[] = [
       "Le Brief : la veille qui va à l'essentiel",
     ],
     cta: "Voir la bibliothèque",
+    href: "/guides",
   },
 ];
 
@@ -142,11 +146,11 @@ function OfferCard({ offer }: { offer: Offer }) {
 
       <div className="mt-auto pt-10">
         {dark ? (
-          <Button href="#test" size="lg" className="w-full">
+          <Button href={offer.href} size="lg" className="w-full">
             {offer.cta}
           </Button>
         ) : (
-          <QuietLink href="#cta">{offer.cta}</QuietLink>
+          <QuietLink href={offer.href}>{offer.cta}</QuietLink>
         )}
       </div>
     </article>
