@@ -10,7 +10,13 @@ import type { EngineAdapter, EngineAnswer } from "../types";
  * même routage. C'est un substitut reproductible et comparable dans le temps,
  * et le site doit le dire tel quel.
  */
-const MODEL = "claude-opus-5";
+/*
+ * Surchargeable comme les trois autres moteurs : un compte peut ne pas avoir
+ * accès à ce palier, ou vouloir un modèle moins cher pour six questions de
+ * repérage. Sans cette variable, il n'y avait aucun moyen d'en changer sans
+ * toucher au code.
+ */
+const MODEL = process.env.ANTHROPIC_AUDIT_MODEL ?? "claude-opus-5";
 
 export function anthropicAdapter(): EngineAdapter {
   const apiKey = engineKeys.anthropic;

@@ -214,6 +214,21 @@ npm run doctor   # chaque clé est vérifiée sur un endpoint gratuit
 
 ---
 
+### Changer de modèle sans toucher au code
+
+Chaque moteur accepte une variable qui remplace le modèle par défaut. Utile
+quand un compte n'a pas accès au palier visé, ou pour baisser la facture :
+
+| Variable | Défaut |
+|---|---|
+| `OPENAI_AUDIT_MODEL` | `gpt-5` |
+| `ANTHROPIC_AUDIT_MODEL` | `claude-opus-5` |
+| `PERPLEXITY_AUDIT_MODEL` | `sonar` |
+| `GEMINI_AUDIT_MODEL` | `gemini-2.5-flash` |
+
+Un modèle refusé par le compte fait échouer le moteur, jamais l'audit : les
+trois autres répondent, et le score se lit sur ce qui a été mesuré.
+
 ## 3. Lancer
 
 ```bash

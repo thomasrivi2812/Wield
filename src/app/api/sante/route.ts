@@ -62,12 +62,7 @@ export async function GET(request: Request) {
       fournisseurs: enabledProviders(),
       variableRenseignee: process.env.NEXT_PUBLIC_AUTH_PROVIDERS !== undefined,
     },
-    moteurs: {
-      chatgpt: Boolean(engineKeys.openai),
-      claude: Boolean(engineKeys.anthropic),
-      perplexity: Boolean(engineKeys.perplexity),
-      gemini: Boolean(engineKeys.google),
-    },
+    moteurs: await checkEngines(),
     stripe: {
       cle: stripe.configured,
       webhook: Boolean(stripe.webhookSecret),
@@ -79,6 +74,58 @@ export async function GET(request: Request) {
   return NextResponse.json(checks, {
     headers: { "Cache-Control": "no-store" },
   });
+}
+
+/**
+ * L'état de chaque moteur, et surtout sa dernière panne.
+ *
+ * Le navigateur ne voit jamais qu'« indisponible » — c'est volontaire, un
+ * message de fournisseur contient des noms d'hôtes et des codes internes.
+ * Mais celui qui exploite le site doit pouvoir lire la vraie cause, et elle
+ * est déjà en base : chaque audit garde le message reçu. Cet écran est
+ * protégé par jeton en production, donc c'est ici que ça se lit.
+ */
+async function checkEngines() {
+  const cles: Record<string, boolean> = {
+    chatgpt: Boolean(engineKeys.openai),
+    claude: Boolean(engineKeys.anthropic),
+    perplexity: Boolean(engineKeys.perplexity),
+    gemini: Boolean(engineKeys.google),
+  };
+
+  const etat: Record<string, unknown> = {};
+  for (const [id, cle] of Object.entries(cles)) {
+    etat[id] = { cle, derniereErreur: null, quand: null };
+  }
+
+  const admin = supabaseAdmin();
+  if (!admin) return etat;
+
+  // Les 40 dernières lignes suffisent : on cherche la panne courante, pas
+  // un historique.
+  const { data } = await admin
+    .from("audit_engines")
+    .select("engine, status, detail, audit_id, audits!inner(created_at)")
+    .eq("status", "error")
+    .order("id", { ascending: false })
+    .limit(40);
+
+  for (const row of (data ?? []) as Array<{
+    engine: string;
+    detail: string | null;
+    audits: { created_at: string } | { created_at: string }[];
+  }>) {
+    const current = etat[row.engine] as { derniereErreur: string | null } | undefined;
+    if (!current || current.derniereErreur) continue;
+    const audit = Array.isArray(row.audits) ? row.audits[0] : row.audits;
+    etat[row.engine] = {
+      cle: cles[row.engine] ?? false,
+      derniereErreur: row.detail ?? "sans détail",
+      quand: audit?.created_at ?? null,
+    };
+  }
+
+  return etat;
 }
 
 async function checkSupabase() {

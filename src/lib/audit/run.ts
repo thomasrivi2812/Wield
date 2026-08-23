@@ -139,8 +139,10 @@ async function runEngine(
       latencyMs: Date.now() - started,
       detail: error instanceof Error ? error.message : "erreur inconnue",
     };
-    // Le détail réel reste pour la base et les journaux ; la route publique
-    // le remplace avant de l'envoyer au navigateur.
+    // Le message du fournisseur est la seule chose qui explique la panne :
+    // il part dans les journaux de l'hébergeur et reste en base. Le
+    // navigateur, lui, ne reçoit qu'« indisponible ».
+    console.error(`[audit] ${adapter.id} a échoué :`, failed.detail);
     notify({ type: "engine", engine: failed.engine, status: failed.status, detail: failed.detail });
     return failed;
   } finally {

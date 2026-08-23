@@ -344,15 +344,17 @@ async function ping(
     const r = await probe(key);
     if (r.ok) {
       add({ level: "ok", label, detail: "clé valide" });
-    } else if (refusedStatuses.includes(r.status)) {
-      add({
-        level: "fail",
-        label,
-        detail: `clé refusée (${r.status})`,
-        fix: `Vérifie ${keyName}.`,
-      });
     } else {
-      add({ level: "warn", label, detail: `réponse inattendue (${r.status})` });
+      // Le corps de la réponse dit ce qui cloche — quota épuisé, modèle
+      // inaccessible, facturation non activée. « refusé (401) » ne le dit pas.
+      const raison = await providerMessage(r);
+      const refuse = refusedStatuses.includes(r.status);
+      add({
+        level: refuse ? "fail" : "warn",
+        label,
+        detail: `${refuse ? "clé refusée" : "réponse inattendue"} (${r.status})${raison ? ` — ${raison}` : ""}`,
+        fix: refuse ? `Vérifie ${keyName}.` : undefined,
+      });
     }
   } catch (error) {
     add({
@@ -360,6 +362,18 @@ async function ping(
       label,
       detail: error instanceof Error ? error.message.slice(0, 60) : "injoignable",
     });
+  }
+}
+
+/** Le message d'erreur du fournisseur, quel que soit son emballage JSON. */
+async function providerMessage(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as Record<string, unknown>;
+    const error = (body.error ?? body) as Record<string, unknown>;
+    const message = error.message ?? error.detail ?? error.type;
+    return typeof message === "string" ? message.slice(0, 160) : null;
+  } catch {
+    return null;
   }
 }
 
@@ -568,11 +582,31 @@ async function remote(target: string): Promise<boolean> {
   });
 
   for (const [id, label] of [["chatgpt", "ChatGPT"], ["claude", "Claude"], ["perplexity", "Perplexity"], ["gemini", "Gemini"]] as const) {
-    add(
-      moteurs?.[id]
-        ? { level: "ok", label, detail: "clé présente" }
-        : { level: "warn", label, detail: "pas de clé — « non mesuré »" },
-    );
+    const etat = moteurs?.[id] as
+      | { cle?: boolean; derniereErreur?: string | null; quand?: string | null }
+      | boolean
+      | undefined;
+
+    // L'ancien format renvoyait un simple booléen ; on reste lisible face aux
+    // deux, le temps que le déploiement rattrape.
+    const cle = typeof etat === "boolean" ? etat : Boolean(etat?.cle);
+    const erreur = typeof etat === "object" ? (etat?.derniereErreur ?? null) : null;
+    const quand = typeof etat === "object" ? (etat?.quand ?? null) : null;
+
+    if (!cle) {
+      add({ level: "warn", label, detail: "pas de clé — « non mesuré »" });
+    } else if (erreur) {
+      add({
+        level: "fail",
+        label,
+        detail: `dernier audit en erreur — ${erreur.slice(0, 140)}`,
+        fix: quand
+          ? `Relevé le ${new Date(quand).toLocaleString("fr-FR")}. Message renvoyé par le fournisseur, tel quel.`
+          : "Message renvoyé par le fournisseur, tel quel.",
+      });
+    } else {
+      add({ level: "ok", label, detail: "clé présente, aucune erreur récente" });
+    }
   }
 
   if (!st?.["cle"]) {
