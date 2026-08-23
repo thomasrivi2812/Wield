@@ -64,8 +64,11 @@ test("le score s'affiche « cité sur mesuré », jamais sur quatre", () => {
     />,
   );
 
-  assert.match(html, /1<\/span><span[^>]*>\/2/);
-  assert.ok(!html.includes("/4"), "le score ne doit pas se lire sur 4");
+  // On lit le texte rendu plutôt que le balisage : la mise en forme du
+  // chiffre peut changer, la règle « cité sur mesuré » non.
+  const text = html.replace(/<[^>]*>/g, "");
+  assert.match(text, /1\/2/);
+  assert.ok(!text.includes("/4"), "le score ne doit pas se lire sur 4");
   assert.match(html, /Non mesuré/);
 });
 

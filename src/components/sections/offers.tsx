@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/reveal";
 import { Button, QuietLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Em } from "@/components/ui/em";
@@ -66,15 +67,19 @@ export function Offers() {
     <section id="offres" className="scroll-mt-20 border-b border-line bg-surface">
       <Container>
         <div className="py-20 lg:py-24">
-          <Eyebrow>Les offres</Eyebrow>
+          <Reveal>
+            <Eyebrow>Les offres</Eyebrow>
 
-          <h2 className="mt-7 max-w-[18ch] text-[2.5rem] leading-[1.04] sm:text-[3rem] lg:text-[3.5rem]">
-            Trois façons de <Em>travailler</Em> avec Wield
-          </h2>
+            <h2 className="mt-7 max-w-[18ch] text-[2.5rem] leading-[1.04] sm:text-[3rem] lg:text-[3.5rem]">
+              Trois façons de <Em>travailler</Em> avec Wield
+            </h2>
+          </Reveal>
 
           <div className="mt-14 grid items-stretch gap-6 lg:grid-cols-3">
-            {OFFERS.map((offer) => (
-              <OfferCard key={offer.name} offer={offer} />
+            {OFFERS.map((offer, i) => (
+              <Reveal key={offer.name} delay={i * 90} className="flex">
+                <OfferCard offer={offer} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -90,8 +95,8 @@ function OfferCard({ offer }: { offer: Offer }) {
     <article
       className={
         dark
-          ? "relative flex flex-col rounded-md border border-slate bg-slate p-8 text-ink-invert lg:-mt-4 lg:p-10 lg:pb-10 shadow-[0_28px_70px_-40px_rgba(21,23,28,0.6)]"
-          : "relative flex flex-col rounded-md border border-line bg-surface p-8 lg:p-10"
+          ? "relative flex w-full flex-col rounded-md border border-slate bg-slate p-8 text-ink-invert lg:-mt-4 lg:p-10 lg:pb-10 shadow-[0_28px_70px_-40px_rgba(21,23,28,0.6)]"
+          : "relative flex w-full flex-col rounded-md border border-line bg-surface p-8 lg:p-10"
       }
     >
       <div className="flex items-center justify-between gap-4">

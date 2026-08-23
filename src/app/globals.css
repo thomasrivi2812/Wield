@@ -97,6 +97,75 @@
   }
 }
 
+/* ------------------------------------------------------------------
+   Mouvement
+   Une seule idée : ce qui arrive monte de quelques pixels en
+   s'éclaircissant. Rien ne rebondit, rien ne tourne, rien ne clignote.
+   Toutes les durées restent sous 600 ms — au-delà, on attend le site.
+   `prefers-reduced-motion` neutralise l'ensemble, plus bas.
+------------------------------------------------------------------- */
+@theme {
+  --animate-rise: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-pulse-soft: pulse-soft 1.8s ease-in-out infinite;
+  --animate-draw: draw 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 12px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* Le point « en cours » : il respire, il ne clignote pas. */
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  /* Un trait qui se trace, pour les filets sous les titres. */
+  @keyframes draw {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
+@layer components {
+  /*
+   * Révélation au défilement. L'élément est masqué tant qu'il n'est pas
+   * entré dans le champ, puis monte une fois. `data-shown` est posé par
+   * le composant Reveal.
+   *
+   * Le repli sans JavaScript compte : si le script ne s'exécute pas, la
+   * règle `no-js` laisse tout visible plutôt que de masquer la page.
+   */
+  .reveal {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    transition:
+      opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .reveal[data-shown="true"] {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @layer components {
   /* Micro-libellé : la petite étiquette d'atelier */
   .eyebrow {
@@ -132,6 +201,11 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  /* Une révélation figée laisserait la page vide : on la rend visible. */
+  .reveal {
+    opacity: 1;
+    transform: none;
   }
   *,
   *::before,

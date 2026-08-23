@@ -49,6 +49,16 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={`${publicSans.variable} ${archivo.variable}`}>
+      <head>
+        {/*
+          Filet de sécurité : la classe `.reveal` masque son contenu en
+          attendant que le script le dévoile. Sans JavaScript, ce masquage
+          viderait la page — cette règle l'annule.
+        */}
+        <noscript>
+          <style>{`.reveal{opacity:1 !important;transform:none !important}`}</style>
+        </noscript>
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

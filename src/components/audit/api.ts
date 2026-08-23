@@ -1,3 +1,5 @@
+import type { AuditProgress } from "@/lib/audit/types";
+
 /** Forme de la réponse publique de POST /api/audit. */
 export type EngineView = {
   engine: string;
@@ -21,15 +23,28 @@ export type AuditView = {
   engines: EngineView[];
 };
 
-export type AuditState =
-  | { phase: "scanning" }
-  | { phase: "done"; data: AuditView }
-  | { phase: "error"; message: string };
+export type AuditEvent =
+  | AuditProgress
+  | ({ type: "done" } & AuditView)
+  | { type: "error"; message: string };
 
-export async function requestAudit(
+/** Vrai quand aucun moteur n'a pu être interrogé. */
+export function isUnmeasured(status: EngineView["status"]): boolean {
+  return status === "not_configured" || status === "not_implemented";
+}
+
+/**
+ * Lance l'audit et rend compte au fil de l'eau.
+ *
+ * La réponse est du NDJSON : un objet JSON complet par ligne. Les refus
+ * immédiats (requête invalide, plafond atteint) arrivent en JSON classique
+ * avec un statut d'erreur — il faut donc gérer les deux.
+ */
+export async function streamAudit(
   input: { query: string; domain?: string; anonId?: string },
+  onEvent: (event: AuditEvent) => void,
   signal?: AbortSignal,
-): Promise<AuditView> {
+): Promise<void> {
   const response = await fetch("/api/audit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -37,19 +52,51 @@ export async function requestAudit(
     signal,
   });
 
-  const payload = await response.json().catch(() => null);
-
   if (!response.ok) {
-    throw new Error(
-      (payload as { error?: string } | null)?.error ??
-        "L’audit a échoué. Réessaie dans un instant.",
-    );
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new Error(payload?.error ?? "L’audit a échoué. Réessaie dans un instant.");
   }
 
-  return payload as AuditView;
+  if (!response.body) {
+    throw new Error("Réponse vide du serveur.");
+  }
+
+  const reader = response.body.getReader();
+  // `stream: true` : un caractère accentué peut être coupé entre deux blocs.
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      let cut = buffer.indexOf("\n");
+      while (cut !== -1) {
+        emit(buffer.slice(0, cut), onEvent);
+        buffer = buffer.slice(cut + 1);
+        cut = buffer.indexOf("\n");
+      }
+    }
+
+    // Le flux peut se terminer sans saut de ligne final.
+    buffer += decoder.decode();
+    emit(buffer, onEvent);
+  } finally {
+    reader.releaseLock();
+  }
 }
 
-/** Vrai quand aucun moteur n'a pu être interrogé. */
-export function isUnmeasured(status: EngineView["status"]): boolean {
-  return status === "not_configured" || status === "not_implemented";
+function emit(line: string, onEvent: (event: AuditEvent) => void): void {
+  const trimmed = line.trim();
+  if (!trimmed) return;
+  try {
+    onEvent(JSON.parse(trimmed) as AuditEvent);
+  } catch {
+    // Une ligne illisible ne doit pas interrompre le reste du flux.
+  }
 }

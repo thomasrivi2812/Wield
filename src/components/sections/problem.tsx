@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/reveal";
 import { Container } from "@/components/ui/container";
 import { Em } from "@/components/ui/em";
 import { Eyebrow } from "@/components/ui/section";
@@ -14,7 +15,7 @@ export function Problem() {
       />
       <Container className="relative">
         <div className="grid gap-14 py-20 lg:grid-cols-12 lg:gap-16 lg:py-28">
-          <div className="lg:col-span-7">
+          <Reveal className="lg:col-span-7">
             <Eyebrow onDark>
               Le problème
             </Eyebrow>
@@ -36,11 +37,11 @@ export function Problem() {
             <p className="mt-7 max-w-[24ch] font-display text-[1.5rem] font-semibold leading-[1.25] text-ink-invert sm:text-[1.75rem]">
               Si tu n&apos;es pas dans la réponse, tu n&apos;existes plus.
             </p>
-          </div>
+          </Reveal>
 
-          <div className="lg:col-span-5 lg:pt-4">
+          <Reveal delay={120} className="lg:col-span-5 lg:pt-4">
             <BeforeAfter />
-          </div>
+          </Reveal>
         </div>
       </Container>
     </section>

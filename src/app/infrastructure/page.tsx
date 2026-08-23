@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/reveal";
 import type { Metadata } from "next";
 import { PageShell, PageHeader } from "@/components/page-shell";
 import { Container } from "@/components/ui/container";
@@ -66,13 +67,13 @@ export default function InfrastructurePage() {
             </h2>
 
             <ul className="mt-10 grid gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-              {BUILDS.map((build) => (
-                <li key={build.title} className="bg-surface p-7 lg:p-8">
+              {BUILDS.map((build, i) => (
+                <Reveal as="li" key={build.title} delay={i * 70} className="bg-surface p-7 lg:p-8">
                   <h3 className="text-[1.1875rem] leading-snug">{build.title}</h3>
                   <p className="mt-3 text-[0.9375rem] leading-[1.6] text-ink-soft">
                     {build.body}
                   </p>
-                </li>
+                </Reveal>
               ))}
             </ul>
           </div>
@@ -88,16 +89,18 @@ export default function InfrastructurePage() {
             </h2>
 
             <ol className="mt-10 grid gap-6 md:grid-cols-3">
-              {STEPS.map((step) => (
-                <li
+              {STEPS.map((step, i) => (
+                <Reveal
+                  as="li"
                   key={step.title}
+                  delay={i * 90}
                   className="rounded-md border border-line bg-surface p-7 lg:p-8"
                 >
                   <h3 className="text-[1.25rem] leading-snug">{step.title}</h3>
                   <p className="mt-3 text-[0.9375rem] leading-[1.6] text-ink-soft">
                     {step.body}
                   </p>
-                </li>
+                </Reveal>
               ))}
             </ol>
           </div>

@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/reveal";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Em } from "@/components/ui/em";
@@ -13,7 +14,7 @@ export function FinalCta() {
         className="grid-hairline pointer-events-none absolute inset-0"
       />
       <Container className="relative">
-        <div className="flex flex-col items-center py-24 text-center lg:py-32">
+        <Reveal className="flex flex-col items-center py-24 text-center lg:py-32">
           <p className="eyebrow text-cobalt-light">Prochaine étape</p>
 
           <h2 className="mt-7 max-w-[20ch] text-[2.375rem] leading-[1.06] sm:text-[3rem] lg:text-[3.5rem]">
@@ -37,7 +38,7 @@ export function FinalCta() {
           <p className="mt-6 text-[0.8125rem] text-ink-invert-soft">
             Réponse sous 48 h · Données hébergées en Europe
           </p>
-        </div>
+        </Reveal>
       </Container>
     </section>
   );

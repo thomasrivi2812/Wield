@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/ui/container";
+import { Reveal } from "@/components/ui/reveal";
 import { ClaimThenRefresh } from "@/components/audit/claim-then-refresh";
 import { PlanSection } from "@/components/audit/plan-section";
 import { ReportSection } from "@/components/audit/report-section";
@@ -66,7 +67,7 @@ export default async function AuditResultPage({
           <div className="flex flex-col gap-6 py-14 lg:py-20">
             {shouldClaim ? <ClaimThenRefresh /> : null}
 
-            <header className="flex flex-col gap-5 border-b border-line pb-8">
+            <Reveal as="header" className="flex flex-col gap-5 border-b border-line pb-8">
               <p className="eyebrow flex items-center gap-3 text-ink-soft">
                 <span aria-hidden="true" className="h-px w-8 bg-cobalt" />
                 Audit de visibilité IA
@@ -80,25 +81,33 @@ export default async function AuditResultPage({
                   : "Aucun moteur n’a pu être interrogé pour cet audit."}
                 {audit.domain ? ` Domaine analysé : ${audit.domain}.` : ""}
               </p>
-            </header>
+            </Reveal>
 
-            <ScoreCard
-              citedCount={audit.citedCount}
-              measuredCount={audit.measuredCount}
-              engines={audit.engines}
-            />
+            <Reveal>
+              <ScoreCard
+                citedCount={audit.citedCount}
+                measuredCount={audit.measuredCount}
+                engines={audit.engines}
+              />
+            </Reveal>
 
-            <ReportSection prompts={audit.prompts} auditId={audit.id} />
+            <Reveal>
+              <ReportSection prompts={audit.prompts} auditId={audit.id} />
+            </Reveal>
 
-            <PlanSection
-              plan={audit.plan}
-              auditId={audit.id}
-              sellable={isSellable(audit)}
-              signedIn={signedIn}
-            />
+            <Reveal>
+              <PlanSection
+                plan={audit.plan}
+                auditId={audit.id}
+                sellable={isSellable(audit)}
+                signedIn={signedIn}
+              />
+            </Reveal>
 
             {isSellable(audit) ? (
-              <SeoSection audit={audit} signedIn={signedIn} />
+              <Reveal>
+                <SeoSection audit={audit} signedIn={signedIn} />
+              </Reveal>
             ) : null}
 
             <p className="pt-2 text-[0.8125rem] leading-relaxed text-absent">

@@ -3,7 +3,7 @@ import { runAudit } from "@/lib/audit/run";
 import { PROMPTS_PER_AUDIT } from "@/lib/audit/prompts";
 import { clientIp, consume } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import type { AuditResult } from "@/lib/audit/types";
+import type { AuditProgress, AuditResult } from "@/lib/audit/types";
 
 /** Les moteurs sont lents : la valeur par défaut de Vercel ne suffit pas. */
 export const maxDuration = 300;
@@ -57,27 +57,69 @@ export async function POST(request: Request) {
     domain: typeof domain === "string" && domain.trim() ? domain.trim() : undefined,
   };
 
-  let result: AuditResult;
-  try {
-    result = await runAudit(input);
-  } catch (error) {
-    console.error("[audit] échec", error);
-    return NextResponse.json(
-      { error: "L'audit a échoué. Réessaie dans un instant." },
-      { status: 502 },
-    );
-  }
+  const anon = typeof anonId === "string" ? anonId : undefined;
 
-  const auditId = await persist(
-    result,
-    input,
-    typeof anonId === "string" ? anonId : undefined,
-  );
+  // La réponse est un flux : un audit dure une à deux minutes, et attendre
+  // la fin pour afficher quoi que ce soit donne une page qui semble figée.
+  // Chaque ligne est un objet JSON complet, terminé par un saut de ligne.
+  const encoder = new TextEncoder();
 
-  return NextResponse.json({
-    id: auditId,
-    ...publicView(result),
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      let open = true;
+      const send = (payload: unknown) => {
+        if (!open) return;
+        try {
+          controller.enqueue(encoder.encode(`${JSON.stringify(payload)}\n`));
+        } catch {
+          // Onglet fermé : on cesse d'écrire, mais l'audit va à son terme —
+          // il est payé en appels API, il doit finir en base.
+          open = false;
+        }
+      };
+
+      void (async () => {
+        try {
+          const result = await runAudit(input, undefined, (event) =>
+            send(publicProgress(event)),
+          );
+          const auditId = await persist(result, input, anon);
+          send({ type: "done", id: auditId, ...publicView(result) });
+        } catch (error) {
+          console.error("[audit] échec", error);
+          send({
+            type: "error",
+            message: "L’audit a échoué. Réessaie dans un instant.",
+          });
+        } finally {
+          open = false;
+          try {
+            controller.close();
+          } catch {
+            // déjà fermé côté client
+          }
+        }
+      })();
+    },
   });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      // `no-transform` et `X-Accel-Buffering` empêchent les intermédiaires de
+      // tamponner la réponse : sans eux, tout arrive d'un bloc à la fin et le
+      // flux ne sert plus à rien.
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
+
+/** Même règle que pour le résultat final : aucun message de fournisseur à l'écran. */
+function publicProgress(event: AuditProgress): AuditProgress {
+  return event.type === "engine"
+    ? { ...event, detail: publicDetail(event.status, event.detail) }
+    : event;
 }
 
 /**

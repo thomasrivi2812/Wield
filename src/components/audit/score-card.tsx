@@ -1,4 +1,5 @@
 import { IconCheck, IconCross } from "@/components/ui/icons";
+import { CountUp } from "@/components/ui/count-up";
 import { TierBadge } from "./lock";
 
 export type ScoreEngine = {
@@ -53,7 +54,7 @@ export function ScoreCard({
         <div>
           <p className="font-display text-[3.5rem] leading-none font-extrabold tracking-tight tabular-nums sm:text-[4.5rem]">
             <span className={measured ? "text-cobalt" : "text-absent"}>
-              {measured ? citedCount : "—"}
+              {measured ? <CountUp value={citedCount} /> : "—"}
             </span>
             <span className="text-absent">/{measured ? measuredCount : "—"}</span>
           </p>

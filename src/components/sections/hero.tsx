@@ -14,13 +14,16 @@ export function Hero() {
         <div className="grid items-center gap-14 py-20 lg:grid-cols-12 lg:gap-16 lg:py-28">
           {/* Colonne éditoriale */}
           <div className="min-w-0 lg:col-span-7">
-            <h1 className="text-[2.375rem] leading-[1.03] sm:text-[3.25rem] lg:text-[4.25rem] xl:text-[4.75rem]">
+            <h1 className="animate-rise text-[2.375rem] leading-[1.03] sm:text-[3.25rem] lg:text-[4.25rem] xl:text-[4.75rem]">
               Tes clients demandent à l&apos;IA.
               <br />
               Es-tu <Em>dans la réponse</Em> ?
             </h1>
 
-            <p className="mt-7 max-w-[52ch] text-lg leading-[1.6] text-ink-soft">
+            <p
+              className="animate-rise mt-7 max-w-[52ch] text-lg leading-[1.6] text-ink-soft"
+              style={{ animationDelay: "90ms" }}
+            >
               Wield s&apos;occupe de ton{" "}
               <strong className="font-semibold text-cobalt">
                 référencement sur les IA
@@ -30,7 +33,10 @@ export function Hero() {
               sans jargon.
             </p>
 
-            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <div
+              className="animate-rise mt-10 flex flex-wrap items-center gap-x-8 gap-y-4"
+              style={{ animationDelay: "180ms" }}
+            >
               <Button href="#test" size="lg">
                 Audit de visibilité IA — gratuit
               </Button>
@@ -39,7 +45,10 @@ export function Hero() {
           </div>
 
           {/* Colonne démonstration : la réponse de l'IA, sans toi dedans */}
-          <div className="min-w-0 lg:col-span-5">
+          <div
+            className="animate-rise min-w-0 lg:col-span-5"
+            style={{ animationDelay: "260ms" }}
+          >
             <AnswerPanel />
           </div>
         </div>
@@ -92,7 +101,8 @@ function AnswerPanel() {
             {SOURCES.map((source, i) => (
               <li
                 key={source.name}
-                className="flex items-center gap-3 border-b border-line-invert py-3 last:border-b-0"
+                className="animate-rise flex items-center gap-3 border-b border-line-invert py-3 last:border-b-0"
+                style={{ animationDelay: `${420 + i * 110}ms` }}
               >
                 <span className="font-display text-[0.6875rem] font-semibold text-cobalt-light">
                   {String(i + 1).padStart(2, "0")}

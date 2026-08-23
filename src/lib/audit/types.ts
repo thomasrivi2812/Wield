@@ -67,3 +67,32 @@ export type EngineAdapter = {
   /** Raison affichée quand `ask` est absent. */
   unavailableReason?: string;
 };
+
+/**
+ * Ce qui remonte pendant l'audit, au fil de l'eau.
+ *
+ * Un audit prend une à deux minutes. Sans ces événements, l'écran ne peut
+ * afficher qu'une barre qui avance toute seule — c'est-à-dire une invention.
+ * Ici, chaque avancée affichée correspond à une réponse réellement obtenue.
+ */
+export type AuditProgress =
+  | {
+      type: "start";
+      prompts: string[];
+      engines: Array<{ engine: EngineId; label: string; willQuery: boolean }>;
+    }
+  | {
+      type: "prompt";
+      engine: EngineId;
+      /** Index de la question, à partir de 0. */
+      index: number;
+      cited: boolean;
+    }
+  | {
+      type: "engine";
+      engine: EngineId;
+      status: EngineStatus;
+      detail: string;
+    };
+
+export type ProgressListener = (event: AuditProgress) => void;

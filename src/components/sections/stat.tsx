@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/reveal";
 import { Container } from "@/components/ui/container";
 import { Em } from "@/components/ui/em";
 import { Eyebrow } from "@/components/ui/section";
@@ -13,15 +14,17 @@ export function Stat() {
     <section id="chiffre" className="scroll-mt-20 border-b border-line bg-bg">
       <Container>
         <div className="py-20 lg:py-24">
-          <Eyebrow>Le chiffre</Eyebrow>
+          <Reveal>
+            <Eyebrow>Le chiffre</Eyebrow>
 
-          <h2 className="mt-7 max-w-[18ch] text-[2.5rem] leading-[1.04] sm:text-[3rem] lg:text-[3.5rem]">
-            Quand l&apos;IA répond, <Em>le clic disparaît</Em>.
-          </h2>
+            <h2 className="mt-7 max-w-[18ch] text-[2.5rem] leading-[1.04] sm:text-[3rem] lg:text-[3.5rem]">
+              Quand l&apos;IA répond, <Em>le clic disparaît</Em>.
+            </h2>
+          </Reveal>
 
           <div className="mt-14 grid items-start gap-10 lg:grid-cols-12 lg:gap-16">
             {/* Le nombre héros */}
-            <figure className="lg:col-span-5">
+            <Reveal as="figure" className="lg:col-span-5">
               <p className="font-display text-[7rem] leading-[0.82] font-bold tracking-[-0.04em] text-cobalt tabular-nums sm:text-[9rem] lg:text-[10rem]">
                 1&#8239;%
               </p>
@@ -38,10 +41,10 @@ export function Stat() {
                   source que l&apos;IA cite.
                 </span>
               </p>
-            </figure>
+            </Reveal>
 
             {/* Avant / après : le taux de clic sur un résultat de recherche */}
-            <div className="lg:col-span-7">
+            <Reveal delay={140} className="lg:col-span-7">
               <figure className="rounded-md border border-line bg-surface p-8 lg:p-10">
                 <figcaption className="eyebrow text-ink-soft">
                   Taux de clic sur un résultat de recherche
@@ -67,7 +70,7 @@ export function Stat() {
                   observée de 900 adultes américains, mars 2025.
                 </p>
               </figure>
-            </div>
+            </Reveal>
           </div>
         </div>
       </Container>

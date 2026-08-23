@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/reveal";
 import type { Metadata } from "next";
 import { PageShell, PageHeader } from "@/components/page-shell";
 import { Container } from "@/components/ui/container";
@@ -50,8 +51,10 @@ export default function GuidesPage() {
               {GUIDE_SKUS.map((sku) => {
                 const guide = CATALOG[sku];
                 return (
-                  <li
+                  <Reveal
+                    as="li"
                     key={sku}
+                    delay={GUIDE_SKUS.indexOf(sku) * 70}
                     className="flex flex-col rounded-md border border-line bg-surface p-7 transition-colors hover:border-line-strong"
                   >
                     <p className="eyebrow text-absent">{KINDS[sku]}</p>
@@ -76,7 +79,7 @@ export default function GuidesPage() {
                         className="w-auto"
                       />
                     </div>
-                  </li>
+                  </Reveal>
                 );
               })}
             </ul>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { runAudit } from "./run";
-import type { EngineAdapter, EngineId, Source } from "./types";
+import type { EngineAdapter, EngineId, Source, AuditProgress } from "./types";
 
 const source = (domain: string): Source => ({
   title: domain,
@@ -124,4 +124,68 @@ test("les six questions sont bien posées à chaque moteur", async () => {
   const result = await runAudit(input, [answering("claude", ["concurrent.fr"])]);
   assert.equal(result.prompts.length, 6);
   assert.equal(result.engines[0].prompts.length, 6);
+});
+
+test("la progression suit les réponses réellement obtenues", async () => {
+  const events: AuditProgress[] = [];
+  await runAudit(
+    { query: "menuiserie" },
+    [
+      {
+        id: "chatgpt",
+        label: "ChatGPT",
+        configured: true,
+        ask: async () => ({ text: "ma-boite.fr est une référence", sources: [] }),
+      },
+      {
+        id: "gemini",
+        label: "Gemini",
+        configured: false,
+        unavailableReason: "pas de clé",
+      },
+    ],
+    (event) => events.push(event),
+  );
+
+  const start = events[0];
+  assert.equal(start.type, "start");
+  assert.equal(start.type === "start" && start.prompts.length, 6);
+  assert.deepEqual(
+    start.type === "start" && start.engines.map((e) => e.willQuery),
+    [true, false],
+  );
+
+  // Six questions posées, six événements — pas un de plus.
+  const asked = events.filter((e) => e.type === "prompt");
+  assert.equal(asked.length, 6);
+  assert.deepEqual(
+    asked.map((e) => e.type === "prompt" && e.index),
+    [0, 1, 2, 3, 4, 5],
+  );
+
+  // Chaque moteur annonce son verdict, y compris celui qu'on n'interroge pas.
+  const verdicts = events.filter((e) => e.type === "engine");
+  assert.equal(verdicts.length, 2);
+  assert.ok(
+    verdicts.some((e) => e.type === "engine" && e.status === "not_configured"),
+  );
+});
+
+test("un écouteur qui échoue n'emporte pas l'audit", async () => {
+  const result = await runAudit(
+    { query: "menuiserie" },
+    [
+      {
+        id: "chatgpt",
+        label: "ChatGPT",
+        configured: true,
+        ask: async () => ({ text: "réponse", sources: [] }),
+      },
+    ],
+    () => {
+      throw new Error("le client a fermé son onglet");
+    },
+  );
+
+  assert.equal(result.measuredCount, 1);
 });

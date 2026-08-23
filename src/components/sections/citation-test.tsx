@@ -1,5 +1,6 @@
 "use client";
 
+import { Reveal } from "@/components/ui/reveal";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Container } from "@/components/ui/container";
@@ -33,7 +34,7 @@ export function CitationTest() {
     <section id="test" className="scroll-mt-20 border-b border-line bg-bg">
       <Container>
         <div className="grid gap-14 py-20 lg:grid-cols-12 lg:gap-16 lg:py-24">
-          <div className="min-w-0 lg:col-span-5">
+          <Reveal className="min-w-0 lg:col-span-5">
             <Eyebrow>L&apos;outil</Eyebrow>
 
             <h2 className="mt-7 text-[2.5rem] leading-[1.05] sm:text-[2.75rem] lg:text-[3.25rem]">
@@ -86,10 +87,10 @@ export function CitationTest() {
                 bancaire.
               </p>
             </form>
-          </div>
+          </Reveal>
 
           {/* Aperçu statique : le vrai résultat vit sur /audit */}
-          <div className="min-w-0 lg:col-span-7">
+          <Reveal delay={140} className="min-w-0 lg:col-span-7">
             <div className="rounded-md border border-line bg-surface">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-4 sm:px-8">
                 <p className="eyebrow text-ink-soft">Exemple de résultat</p>
@@ -160,7 +161,7 @@ export function CitationTest() {
                 C&apos;est exactement ce que Wield Radar corrige.
               </p>
             </div>
-          </div>
+          </Reveal>
         </div>
       </Container>
     </section>
