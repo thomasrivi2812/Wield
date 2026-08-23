@@ -101,7 +101,7 @@ test("plan non payé : ni le conseil, ni le constat dans le HTML", () => {
 
   assert.ok(!html.includes("Corps du conseil payant"), "le conseil a fuité");
   assert.ok(!html.includes("pagesjaunes.fr"), "le constat a fuité");
-  assert.match(html, /2,99/);
+  assert.match(html, /4,99/);
 });
 
 test("plan payé : le conseil et son constat", () => {

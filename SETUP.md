@@ -214,6 +214,23 @@ npm run doctor   # chaque clé est vérifiée sur un endpoint gratuit
 
 ---
 
+### Couper un moteur sans retirer sa clé
+
+`AUDIT_ENGINES` liste les moteurs à interroger. Utile quand un compte n'a pas
+encore de crédit : le moteur est écarté proprement plutôt que de renvoyer une
+erreur à chaque audit.
+
+```bash
+AUDIT_ENGINES=perplexity            # un seul
+AUDIT_ENGINES=perplexity,claude     # deux
+# variable absente                  → les quatre
+```
+
+Un moteur écarté s'affiche « non mesuré » : il n'entre pas dans le score et
+n'est **jamais** compté comme une absence. Retirer sa clé produirait le même
+résultat, mais le diagnostic dirait « pas de clé » — faux, et trompeur au
+moment de la remettre.
+
 ### Changer de modèle sans toucher au code
 
 Chaque moteur accepte une variable qui remplace le modèle par défaut. Utile

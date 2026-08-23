@@ -55,8 +55,15 @@ export async function streamAudit(
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as {
       error?: string;
+      signIn?: boolean;
     } | null;
-    throw new Error(payload?.error ?? "L’audit a échoué. Réessaie dans un instant.");
+    const failure = new Error(
+      payload?.error ?? "L’audit a échoué. Réessaie dans un instant.",
+    ) as Error & { signIn?: boolean };
+    // La session a pu expirer entre l'affichage de la page et l'envoi :
+    // l'appelant recharge, et retombe sur le mur de connexion.
+    failure.signIn = payload?.signIn === true;
+    throw failure;
   }
 
   if (!response.body) {

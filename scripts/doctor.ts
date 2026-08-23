@@ -583,7 +583,12 @@ async function remote(target: string): Promise<boolean> {
 
   for (const [id, label] of [["chatgpt", "ChatGPT"], ["claude", "Claude"], ["perplexity", "Perplexity"], ["gemini", "Gemini"]] as const) {
     const etat = moteurs?.[id] as
-      | { cle?: boolean; derniereErreur?: string | null; quand?: string | null }
+      | {
+          cle?: boolean;
+          actif?: boolean;
+          derniereErreur?: string | null;
+          quand?: string | null;
+        }
       | boolean
       | undefined;
 
@@ -593,7 +598,16 @@ async function remote(target: string): Promise<boolean> {
     const erreur = typeof etat === "object" ? (etat?.derniereErreur ?? null) : null;
     const quand = typeof etat === "object" ? (etat?.quand ?? null) : null;
 
-    if (!cle) {
+    const actif = typeof etat === "object" ? etat?.actif !== false : true;
+
+    if (!actif) {
+      add({
+        level: "warn",
+        label,
+        detail: "coupé volontairement (AUDIT_ENGINES)",
+        fix: "Retire-le d'AUDIT_ENGINES pour le réactiver, ou supprime la variable pour les quatre.",
+      });
+    } else if (!cle) {
       add({ level: "warn", label, detail: "pas de clé — « non mesuré »" });
     } else if (erreur) {
       add({

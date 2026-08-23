@@ -3,7 +3,7 @@
  *
  * Un prix affiché ailleurs qu'ici finit toujours par diverger de ce qui est
  * réellement débité. Les pages lisent ce fichier, et la session de paiement
- * aussi : impossible d'annoncer 2,99 € et d'encaisser 3,99 €.
+ * aussi : impossible d'annoncer 4,99 € et d'encaisser 5,99 €.
  */
 
 export type Sku =
@@ -34,7 +34,7 @@ export const CATALOG: Record<Sku, Product> = {
     sku: "report_geo",
     name: "Plan d’action GEO",
     description: "Ce qu’il faut corriger pour être cité, priorisé par impact.",
-    amountCents: 299,
+    amountCents: 499,
     mode: "payment",
     kind: "rapport",
   },
@@ -135,7 +135,7 @@ const EUROS = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 2,
 });
 
-/** « 2,99 € » pour 299, « 29 € » pour 2900 : pas de décimales inutiles. */
+/** « 4,99 € » pour 499, « 29 € » pour 2900 : pas de décimales inutiles. */
 export function formatPrice(amountCents: number): string {
   return EUROS.format(amountCents / 100);
 }

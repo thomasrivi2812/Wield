@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enabledEngines } from "@/lib/audit/enabled";
 import { engineKeys, resend, stripe, supabase } from "@/lib/env";
 import { enabledProviders } from "@/lib/auth-providers";
 import { REQUIREMENTS, findMisnamed, findMissingPrefix } from "@/lib/env-names";
@@ -94,9 +95,13 @@ async function checkEngines() {
     gemini: Boolean(engineKeys.google),
   };
 
+  // Un moteur coupé volontairement n'est pas une panne : le diagnostic doit
+  // faire la différence, sinon on cherche un bug qui n'existe pas.
+  const actifs = new Set<string>(enabledEngines());
+
   const etat: Record<string, unknown> = {};
   for (const [id, cle] of Object.entries(cles)) {
-    etat[id] = { cle, derniereErreur: null, quand: null };
+    etat[id] = { cle, actif: actifs.has(id), derniereErreur: null, quand: null };
   }
 
   const admin = supabaseAdmin();
@@ -121,6 +126,7 @@ async function checkEngines() {
     const audit = Array.isArray(row.audits) ? row.audits[0] : row.audits;
     etat[row.engine] = {
       cle: cles[row.engine] ?? false,
+      actif: actifs.has(row.engine),
       derniereErreur: row.detail ?? "sans détail",
       quand: audit?.created_at ?? null,
     };

@@ -83,7 +83,8 @@ export function CitationTest() {
               />
               <p className="mt-3 text-[0.8125rem] leading-relaxed text-ink-soft">
                 Sans ton domaine, on voit qui est cité — mais pas si c&apos;est
-                toi. Le score s&apos;affiche tout de suite, sans compte ni carte
+                toi. Un compte gratuit est demandé avant le lancement&nbsp;:
+                chaque audit interroge les moteurs en direct. Aucune carte
                 bancaire.
               </p>
             </form>

@@ -116,6 +116,14 @@ export function AuditFlow({ query, domain }: { query: string; domain?: string })
     streamAudit({ query, domain, anonId: anonId() }, dispatch, controller.signal).catch(
       (error: unknown) => {
         if (controller.signal.aborted) return;
+
+        // Session expirée : la page rechargée affiche le mur de connexion,
+        // requête conservée. Inutile d'afficher une erreur au passage.
+        if ((error as { signIn?: boolean })?.signIn) {
+          window.location.reload();
+          return;
+        }
+
         dispatch({
           type: "failed",
           message: error instanceof Error ? error.message : "L’audit a échoué.",

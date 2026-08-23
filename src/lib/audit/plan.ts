@@ -3,7 +3,7 @@
  *
  * Règle unique et non négociable : chaque action porte le constat mesuré qui
  * la justifie. Pas de constat, pas d'action. C'est ce qui sépare un rapport
- * vendu 2,99 € d'un texte générique qu'on aurait pu écrire avant de lancer
+ * vendu 4,99 € d'un texte générique qu'on aurait pu écrire avant de lancer
  * l'audit — et c'est la seule raison pour laquelle il vaut son prix.
  */
 

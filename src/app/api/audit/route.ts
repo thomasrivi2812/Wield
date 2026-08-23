@@ -3,6 +3,7 @@ import { costOf } from "@/lib/audit/cost";
 import { runAudit } from "@/lib/audit/run";
 import { PROMPTS_PER_AUDIT } from "@/lib/audit/prompts";
 import { clientIp, consume } from "@/lib/rate-limit";
+import { getSession } from "@/lib/session";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { AuditProgress, AuditResult } from "@/lib/audit/types";
 
@@ -12,12 +13,28 @@ export const dynamic = "force-dynamic";
 
 /**
  * Un audit coûte de l'argent réel à chaque exécution : quatre moteurs fois six
- * questions, avec recherche web. Le plafond est serré exprès.
+ * questions, avec recherche web. Les plafonds sont serrés exprès.
+ *
+ * Deux compteurs, parce qu'ils protègent de deux choses différentes : celui
+ * par compte borne ce qu'une personne peut dépenser, celui par adresse borne
+ * ce qu'un script peut dépenser en créant des comptes à la chaîne.
  */
-const LIMIT_PER_IP = 3;
+const LIMIT_PER_USER = 3;
+const LIMIT_PER_IP = 6;
 const WINDOW_SECONDS = 60 * 60;
 
 export async function POST(request: Request) {
+  // Un audit se paie en appels d'API. Il n'est plus lancé pour un visiteur
+  // anonyme : sans compte, rien ne borne la dépense qu'une adresse tournante
+  // peut provoquer.
+  const session = await getSession();
+  if (session.state === "anonymous") {
+    return NextResponse.json(
+      { error: "Crée ton compte pour lancer un audit.", signIn: true },
+      { status: 401 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -40,15 +57,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const ip = clientIp(request);
-  const verdict = await consume(`audit:${ip}`, LIMIT_PER_IP, WINDOW_SECONDS);
-  if (!verdict.allowed) {
+  const tooMany = { status: 429, headers: { "Retry-After": String(WINDOW_SECONDS) } };
+
+  if (session.state === "signed-in") {
+    const perUser = await consume(
+      `audit:user:${session.user.id}`,
+      LIMIT_PER_USER,
+      WINDOW_SECONDS,
+    );
+    if (!perUser.allowed) {
+      return NextResponse.json(
+        { error: "Tu as atteint la limite de trois audits par heure. Réessaie plus tard." },
+        tooMany,
+      );
+    }
+  }
+
+  const perIp = await consume(
+    `audit:ip:${clientIp(request)}`,
+    LIMIT_PER_IP,
+    WINDOW_SECONDS,
+  );
+  if (!perIp.allowed) {
     return NextResponse.json(
-      {
-        error:
-          "Trop d'audits depuis cette adresse. Réessaie dans une heure, ou crée un compte.",
-      },
-      { status: 429, headers: { "Retry-After": String(WINDOW_SECONDS) } },
+      { error: "Trop d'audits depuis cette adresse. Réessaie dans une heure." },
+      tooMany,
     );
   }
 
@@ -59,6 +92,7 @@ export async function POST(request: Request) {
   };
 
   const anon = typeof anonId === "string" ? anonId : undefined;
+  const owner = session.state === "signed-in" ? session.user.id : null;
 
   // La réponse est un flux : un audit dure une à deux minutes, et attendre
   // la fin pour afficher quoi que ce soit donne une page qui semble figée.
@@ -84,7 +118,7 @@ export async function POST(request: Request) {
           const result = await runAudit(input, undefined, (event) =>
             send(publicProgress(event)),
           );
-          const auditId = await persist(result, input, anon);
+          const auditId = await persist(result, input, anon, owner);
           send({ type: "done", id: auditId, ...publicView(result) });
         } catch (error) {
           console.error("[audit] échec", error);
@@ -155,7 +189,8 @@ function publicDetail(status: string, detail: string): string {
 async function persist(
   result: AuditResult,
   input: { brand?: string; domain?: string },
-  anonId?: string,
+  anonId: string | undefined,
+  userId: string | null,
 ): Promise<string | null> {
   const admin = supabaseAdmin();
   if (!admin) return null;
@@ -163,7 +198,8 @@ async function persist(
   const { data, error } = await admin
     .from("audits")
     .insert({
-      anon_id: anonId ?? null,
+      user_id: userId,
+      anon_id: userId ? null : (anonId ?? null),
       query: result.query,
       brand: input.brand ?? null,
       domain: input.domain ?? null,
