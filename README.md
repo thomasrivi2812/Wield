@@ -91,8 +91,12 @@ Le site doit être son propre cas d'école :
 
 ### Mise en route
 
+Le pas-à-pas complet est dans **[SETUP.md](SETUP.md)** — création du projet
+Supabase, clés, schéma, connexion Google, mise en ligne.
+
 ```bash
 cp .env.example .env.local   # remplis ce dont tu as besoin
+npm run doctor                # dit exactement ce qui manque
 npm run dev
 npm test                      # tests du moteur d'audit
 ```
