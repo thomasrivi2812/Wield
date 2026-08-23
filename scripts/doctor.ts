@@ -14,6 +14,7 @@
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { REQUIREMENTS, findMisnamed, findMissingPrefix } from "../src/lib/env-names";
 
 type Level = "ok" | "warn" | "fail";
 type Check = { level: Level; label: string; detail: string; fix?: string };
@@ -51,6 +52,29 @@ const env = loadEnv();
 const has = (name: string) => Boolean(env[name]?.trim());
 
 /* --- Supabase ------------------------------------------------------------- */
+
+/** Un nom presque juste est pire qu'un nom absent : on le dit en premier. */
+function checkNames(present: Set<string>) {
+  const wrong = [...findMisnamed(present), ...findMissingPrefix(present)];
+  for (const { found, expected } of wrong) {
+    add({
+      level: "fail",
+      label: "Nom de variable",
+      detail: `${found} n'est pas lue`,
+      fix: `Renomme-la en ${expected}.`,
+    });
+  }
+
+  const missing = REQUIREMENTS.filter((r) => r.required && !present.has(r.name));
+  for (const r of missing) {
+    add({
+      level: "fail",
+      label: "Variable requise",
+      detail: `${r.name} absente`,
+      fix: `Sans elle : ${r.unlocks}.`,
+    });
+  }
+}
 
 async function checkSupabase() {
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
@@ -408,6 +432,27 @@ async function remote(target: string): Promise<boolean> {
     return false;
   }
 
+  const vars = payload["variables"] as
+    | { malNommees?: { trouve: string; attendu: string }[]; manquantes?: { nom: string; requise: boolean; debloque: string }[] }
+    | undefined;
+
+  for (const m of vars?.malNommees ?? []) {
+    add({
+      level: "fail",
+      label: "Nom de variable",
+      detail: `${m.trouve} n'est pas lue`,
+      fix: `Renomme-la en ${m.attendu} chez l'hébergeur, puis redéploie.`,
+    });
+  }
+  for (const m of (vars?.manquantes ?? []).filter((x) => x.requise)) {
+    add({
+      level: "fail",
+      label: "Variable requise",
+      detail: `${m.nom} absente`,
+      fix: `Sans elle : ${m.debloque}.`,
+    });
+  }
+
   const sb = payload["supabase"] as Record<string, never>;
   const moteurs = payload["moteurs"] as Record<string, boolean>;
   const co = payload["connexion"] as Record<string, never>;
@@ -485,6 +530,7 @@ async function main() {
     );
   }
 
+  checkNames(new Set(Object.keys(env)));
   await checkSupabase();
   await checkEngines();
   checkOptional();

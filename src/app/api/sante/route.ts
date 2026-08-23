@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { engineKeys, resend, stripe, supabase } from "@/lib/env";
 import { enabledProviders } from "@/lib/auth-providers";
+import { REQUIREMENTS, findMisnamed, findMissingPrefix } from "@/lib/env-names";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +38,24 @@ export async function GET(request: Request) {
     }
   }
 
+  // Uniquement des noms, jamais des valeurs.
+  const present = new Set(
+    Object.entries(process.env)
+      .filter(([, v]) => v !== undefined && v !== "")
+      .map(([k]) => k),
+  );
+
   const checks: Record<string, unknown> = {
+    variables: {
+      manquantes: REQUIREMENTS.filter((r) => !present.has(r.name)).map((r) => ({
+        nom: r.name,
+        requise: r.required,
+        debloque: r.unlocks,
+      })),
+      malNommees: [...findMisnamed(present), ...findMissingPrefix(present)].map(
+        (m) => ({ trouve: m.found, attendu: m.expected }),
+      ),
+    },
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
     supabase: await checkSupabase(),
     connexion: {
