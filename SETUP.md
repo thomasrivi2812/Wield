@@ -26,20 +26,38 @@ d'un résultat, et il le dit. Tu peux donc t'arrêter après n'importe quelle
 3. Note le mot de passe de la base : il n'est plus affiché ensuite.
 4. Deux minutes de provisionnement.
 
-### Récupérer les trois clés
+### Récupérer les trois valeurs
 
-**Project Settings → API** :
+Le plus rapide : le bouton vert **Connect**, en haut du tableau de bord. Il
+affiche l'URL du projet et les clés, prêtes à copier.
 
-| Champ du tableau de bord | Variable |
+Sinon, **Settings → API Keys**. Supabase a changé de format de clés ; les deux
+fonctionnent, prends celles du premier onglet.
+
+**Onglet « Publishable and secret API keys »** — le format actuel :
+
+| Tableau de bord | Variable |
 |---|---|
-| Project URL | `NEXT_PUBLIC_SUPABASE_URL` |
+| Publishable key — `sb_publishable_…` | `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Secret key — `sb_secret_…` | `SUPABASE_SERVICE_ROLE_KEY` |
+
+**Onglet « Legacy anon, service_role API keys »** — l'ancien format, encore
+accepté :
+
+| Tableau de bord | Variable |
+|---|---|
 | `anon` `public` | `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
 | `service_role` `secret` | `SUPABASE_SERVICE_ROLE_KEY` |
 
-> **La clé `service_role` contourne RLS.** Elle ne doit jamais porter le
-> préfixe `NEXT_PUBLIC_`, ni finir dans un composant client. Si elle fuite,
-> n'importe qui lit et modifie toute ta base. `npm run doctor` refuse de
-> passer si elle est exposée.
+L'URL du projet se trouve sous **Settings → Data API**, ou dans le panneau
+**Connect**.
+
+> **Les deux clés se ressemblent et sont côte à côte.** Les intervertir est
+> l'erreur la plus facile à faire, et la plus grave : une clé secrète placée
+> dans une variable `NEXT_PUBLIC_` part dans le JavaScript envoyé à chaque
+> visiteur, et elle contourne RLS — n'importe qui lit et modifie toute ta
+> base. `npm run doctor` refuse de passer si les clés sont interverties ou si
+> la clé secrète est exposée.
 
 Colle-les dans `.env.local`.
 

@@ -49,6 +49,25 @@ async function checkSupabase() {
   const anon = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const service = env.SUPABASE_SERVICE_ROLE_KEY;
 
+  // Contrôle purement textuel, fait avant tout appel réseau : une clé
+  // intervertie doit être signalée même si le projet est injoignable.
+  if (anon?.startsWith("sb_secret_") || anon?.includes("service_role")) {
+    add({
+      level: "fail",
+      label: "Supabase — clés interverties",
+      detail: "la clé SECRÈTE est dans une variable publique",
+      fix: "NEXT_PUBLIC_SUPABASE_ANON_KEY doit recevoir la clé publishable (sb_publishable_…). Révoque la clé secrète exposée et régénère-la.",
+    });
+  }
+  if (service?.startsWith("sb_publishable_")) {
+    add({
+      level: "fail",
+      label: "Supabase — clés interverties",
+      detail: "la clé publique est utilisée comme clé de service",
+      fix: "SUPABASE_SERVICE_ROLE_KEY doit recevoir la clé secrète (sb_secret_…) : sans elle, rien ne s'enregistre.",
+    });
+  }
+
   if (!url || !anon) {
     add({
       level: "fail",
@@ -99,6 +118,15 @@ async function checkSupabase() {
       label: "Supabase — clé de service",
       detail: "exposée au navigateur",
       fix: "Retire tout NEXT_PUBLIC_ devant la clé de service : elle contourne RLS.",
+    });
+  }
+
+  if (service.startsWith("sb_publishable_")) {
+    add({
+      level: "fail",
+      label: "Supabase — clés interverties",
+      detail: "la clé publique est utilisée comme clé de service",
+      fix: "SUPABASE_SERVICE_ROLE_KEY doit recevoir la clé secrète (sb_secret_…) : sans elle, rien ne s'enregistre.",
     });
   }
 
