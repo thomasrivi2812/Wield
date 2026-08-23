@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { ContentBlock } from "@anthropic-ai/sdk/resources/messages";
-import { extractAnswer } from "./anthropic";
+import { parseAnthropic } from "./parse";
 
 const searchResult = (url: string, title: string) => ({
   type: "web_search_result" as const,
@@ -23,7 +23,7 @@ const textBlock = (text: string): ContentBlock =>
   ({ type: "text", text, citations: null }) as unknown as ContentBlock;
 
 test("concatène les blocs de texte et collecte les sources", () => {
-  const answer = extractAnswer([
+  const answer = parseAnthropic([
     resultBlock([
       searchResult("https://www.concurrent-a.fr/page", "Concurrent A"),
       searchResult("https://ma-boite.fr", "Ma boîte"),
@@ -34,7 +34,7 @@ test("concatène les blocs de texte et collecte les sources", () => {
 
   assert.equal(answer.text, "Voici deux entreprises.\nLa première est la plus citée.");
   assert.deepEqual(
-    answer.sources.map((s) => s.domain),
+    answer.sources.map((s: { domain: string }) => s.domain),
     ["concurrent-a.fr", "ma-boite.fr"],
   );
 });
@@ -42,7 +42,7 @@ test("concatène les blocs de texte et collecte les sources", () => {
 test("traverse un résultat de recherche en erreur sans planter", () => {
   // Les erreurs d'outil serveur ne lèvent pas : elles arrivent en HTTP 200
   // avec un objet d'erreur à la place de la liste de résultats.
-  const answer = extractAnswer([
+  const answer = parseAnthropic([
     resultBlock({ type: "web_search_tool_result_error", error_code: "max_uses_exceeded" }),
     textBlock("Je n'ai pas pu chercher."),
   ]);
@@ -52,7 +52,7 @@ test("traverse un résultat de recherche en erreur sans planter", () => {
 });
 
 test("ignore les blocs inconnus", () => {
-  const answer = extractAnswer([
+  const answer = parseAnthropic([
     { type: "thinking", thinking: "", signature: "" } as unknown as ContentBlock,
     textBlock("Réponse."),
   ]);
@@ -62,5 +62,5 @@ test("ignore les blocs inconnus", () => {
 });
 
 test("une réponse sans texte ni source reste exploitable", () => {
-  assert.deepEqual(extractAnswer([]), { text: "", sources: [] });
+  assert.deepEqual(parseAnthropic([]), { text: "", sources: [] });
 });

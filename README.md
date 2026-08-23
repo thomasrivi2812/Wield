@@ -118,9 +118,22 @@ src/lib/audit/
   detect.ts             la marque est-elle citée ? (domaine, puis nom)
   run.ts                orchestration, tolérance aux pannes, score
   providers/
-    anthropic.ts        Claude — écrit et testé
-    pending.ts          ChatGPT, Perplexity, Gemini — à écrire
+    parse.ts            lecture des réponses — fonctions pures, types seuls
+    openai.ts           ChatGPT, API Responses + outil de recherche web
+    anthropic.ts        Claude, outil de recherche web côté serveur
+    perplexity.ts       Perplexity, modèle Sonar
+    gemini.ts           Gemini, ancrage sur la recherche Google
 ```
+
+Chaque fournisseur range ses sources ailleurs : bloc dédié chez Anthropic,
+annotations posées sur le texte chez OpenAI, champ séparé chez Perplexity,
+métadonnées d'ancrage chez Google. `parse.ts` regroupe les quatre lectures et
+n'importe que des types — aucun SDK n'est chargé pour les tester. Les SDK
+eux-mêmes ne sont chargés qu'au moment d'un audit réel.
+
+Les messages d'erreur des fournisseurs restent en base et dans les journaux :
+ils contiennent des noms d'hôtes et des codes internes, le navigateur reçoit
+« moteur momentanément indisponible ».
 
 `POST /api/audit` avec `{ query, brand?, domain? }`. Limité à 3 audits par
 heure et par adresse IP : un audit consomme de vrais jetons chez quatre

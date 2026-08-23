@@ -1,6 +1,5 @@
 import { detectCitation } from "./detect";
 import { buildPrompts } from "./prompts";
-import { adapters } from "./providers";
 import type {
   AuditInput,
   AuditResult,
@@ -17,11 +16,13 @@ const ENGINE_TIMEOUT_MS = 90_000;
  */
 export async function runAudit(
   input: AuditInput,
-  engineList: EngineAdapter[] = adapters(),
+  engineList?: EngineAdapter[],
 ): Promise<AuditResult> {
+  // Import différé : les quatre SDK ne sont chargés que pour un audit réel.
+  const list = engineList ?? (await import("./providers")).adapters();
   const prompts = buildPrompts(input.query);
   const engines = await Promise.all(
-    engineList.map((adapter) => runEngine(adapter, prompts, input)),
+    list.map((adapter) => runEngine(adapter, prompts, input)),
   );
 
   const measured = engines.filter(

@@ -1,5 +1,7 @@
 import { anthropicAdapter } from "./anthropic";
-import { geminiAdapter, openaiAdapter, perplexityAdapter } from "./pending";
+import { geminiAdapter } from "./gemini";
+import { openaiAdapter } from "./openai";
+import { perplexityAdapter } from "./perplexity";
 import type { EngineAdapter } from "../types";
 
 /** L'ordre fixe l'affichage : il ne doit pas dépendre du résultat. */

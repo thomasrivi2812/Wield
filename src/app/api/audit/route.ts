@@ -94,9 +94,18 @@ function publicView(result: AuditResult) {
       engine: engine.engine,
       label: engine.label,
       status: engine.status,
-      detail: engine.detail,
+      detail: publicDetail(engine.status, engine.detail),
     })),
   };
+}
+
+/**
+ * Les messages d'erreur des fournisseurs ne partent jamais au navigateur :
+ * ils contiennent des noms d'hôtes, des codes internes et parfois des
+ * fragments de configuration. Ils restent en base et dans les journaux.
+ */
+function publicDetail(status: string, detail: string): string {
+  return status === "error" ? "moteur momentanément indisponible" : detail;
 }
 
 async function persist(result: AuditResult, anonId?: string): Promise<string | null> {

@@ -1,8 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { ContentBlock } from "@anthropic-ai/sdk/resources/messages";
+import { parseAnthropic } from "./parse";
 import { engineKeys } from "@/lib/env";
-import { toDomain } from "../detect";
-import type { EngineAdapter, EngineAnswer, Source } from "../types";
+import type { EngineAdapter, EngineAnswer } from "../types";
 
 /**
  * Claude, via l'API Messages avec l'outil de recherche web côté serveur.
@@ -56,38 +55,7 @@ export function anthropicAdapter(): EngineAdapter {
         { signal },
       );
 
-      return extractAnswer(response.content);
+      return parseAnthropic(response.content);
     },
   };
-}
-
-/**
- * Reconstitue texte et sources à partir des blocs de réponse.
- *
- * Isolé et testé à part : c'est le point où l'on se trompe. En particulier,
- * quand l'outil de recherche échoue, `content` n'est pas une liste de
- * résultats mais un objet d'erreur — et le parcours doit le traverser sans
- * exploser.
- */
-export function extractAnswer(content: ContentBlock[]): EngineAnswer {
-  const text = content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
-    .join("\n");
-
-  const sources: Source[] = [];
-  for (const block of content) {
-    if (block.type !== "web_search_tool_result") continue;
-    if (!Array.isArray(block.content)) continue;
-    for (const result of block.content) {
-      if (result.type !== "web_search_result") continue;
-      sources.push({
-        title: result.title,
-        url: result.url,
-        domain: toDomain(result.url),
-      });
-    }
-  }
-
-  return { text, sources };
 }
