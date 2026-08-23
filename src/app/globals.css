@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Wield — design tokens
+   Univers : maîtrise, artisanat de précision, l'outil en main.
+   Un seul accent : cobalt. Jamais de glow, jamais de dégradé.
+------------------------------------------------------------------- */
+@theme {
+  /* Surfaces */
+  --color-bg: #f6f7f9; /* blanc froid — fond principal */
+  --color-surface: #ffffff; /* cartes */
+  --color-slate: #15171c; /* ardoise — sections contrastées */
+  --color-slate-soft: #1d2027; /* cartes sur ardoise */
+
+  /* Encre */
+  --color-ink: #15171c;
+  --color-ink-soft: #55585f;
+  --color-ink-invert: #f6f7f9;
+  --color-ink-invert-soft: #a3a7af;
+
+  /* Traits */
+  --color-line: #e4e6eb;
+  --color-line-strong: #d3d6dd;
+  --color-line-invert: rgba(246, 247, 249, 0.14);
+
+  /* Accent unique */
+  --color-cobalt: #2947e0;
+  --color-cobalt-hover: #1f39c2;
+  --color-cobalt-soft: #eaedfd;
+  --color-cobalt-light: #7d92f2; /* cobalt éclairci, lisible sur ardoise */
+
+  /* États de données */
+  --color-present: #2947e0;
+  --color-absent: #a3a7af;
+  --color-present-invert: #7d92f2;
+  --color-absent-invert: #6b6f78;
+
+  /* Typo */
+  --font-display: var(--font-space-grotesk), "Space Grotesk", ui-sans-serif,
+    system-ui, sans-serif;
+  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+
+  /* Rayons — bordures nettes, presque droites */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv05" 1, "ss01" 1;
+  }
+
+  ::selection {
+    background-color: var(--color-cobalt);
+    color: #ffffff;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-cobalt);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* Micro-libellé : la petite étiquette d'atelier */
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  /* Trame technique très discrète, en fond de section ardoise */
+  .grid-hairline {
+    background-image: linear-gradient(
+        to right,
+        rgba(246, 247, 249, 0.05) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(246, 247, 249, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .grid-hairline-light {
+    background-image: linear-gradient(
+        to right,
+        rgba(21, 23, 28, 0.035) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(21, 23, 28, 0.035) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

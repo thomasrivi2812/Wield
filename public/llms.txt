@@ -1,0 +1,25 @@
+# Wield
+
+> Wield rend les PME françaises visibles et recommandées sur les moteurs de
+> réponse (ChatGPT, Claude, Perplexity, Gemini) et les accompagne dans
+> l'adoption interne de l'IA. Basé en France, données hébergées en Europe.
+
+## Offres
+
+- [Wield Radar](https://wield.fr/#offres) : visibilité IA (GEO/AEO). Audit du
+  taux de citation, optimisation du contenu et des données, rapport mensuel de
+  progression, moteur par moteur. Abonnement mensuel.
+- [Wield Studio](https://wield.fr/#offres) : accompagnement sur mesure à
+  l'adoption de l'IA dans les équipes. Diagnostic des usages, mise en place des
+  outils, formation courte. Mission sur devis.
+- [Wield Playbooks + Brief](https://wield.fr/#offres) : guides pratiques par
+  métier, comparateur de prix des IA tenu à jour, et veille hebdomadaire.
+
+## Ressources
+
+- [Test de visibilité IA](https://wield.fr/#test) : mesure gratuite du taux de
+  citation d'une marque sur les quatre principaux moteurs de réponse.
+
+## Contact
+
+- [Audit de visibilité IA — gratuit](https://wield.fr/#cta)
