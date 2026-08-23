@@ -26,15 +26,18 @@ function loadEnv(): Record<string, string> {
       for (const line of raw.split("\n")) {
         const match = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
         if (!match) continue;
+        // On conserve les valeurs vides : « variable absente » et « variable
+        // vide » n'ont pas le même sens pour NEXT_PUBLIC_AUTH_PROVIDERS, et
+        // le diagnostic doit refléter ce que l'application voit.
         const value = match[2].trim().replace(/^["']|["']$/g, "");
-        if (value && !out[match[1]]) out[match[1]] = value;
+        if (!(match[1] in out)) out[match[1]] = value;
       }
     } catch {
       // fichier absent : ce n'est pas une erreur, on le signale plus bas
     }
   }
   for (const [k, v] of Object.entries(process.env)) {
-    if (v && !out[k]) out[k] = v;
+    if (v !== undefined && !(k in out)) out[k] = v;
   }
   return out;
 }
@@ -326,6 +329,39 @@ function checkOptional() {
         : "clé de test, webhook configuré",
     });
   }
+  const rawProviders = env.NEXT_PUBLIC_AUTH_PROVIDERS;
+  const known = ["google", "azure", "apple", "linkedin_oidc", "github"];
+  if (rawProviders === undefined) {
+    add({
+      level: "warn",
+      label: "Connexion",
+      detail: "google seul (valeur par défaut) + lien e-mail",
+      fix: "Renseigne NEXT_PUBLIC_AUTH_PROVIDERS pour en proposer d'autres.",
+    });
+  } else {
+    const listed = rawProviders
+      .split(",")
+      .map((p) => p.trim().toLowerCase())
+      .filter(Boolean);
+    const unknown = listed.filter((p) => !known.includes(p));
+    if (unknown.length) {
+      add({
+        level: "fail",
+        label: "Connexion",
+        detail: `fournisseur inconnu : ${unknown.join(", ")}`,
+        fix: `Valeurs acceptées : ${known.join(", ")}.`,
+      });
+    }
+    const valid = listed.filter((p) => known.includes(p));
+    add({
+      level: valid.length ? "ok" : "warn",
+      label: "Connexion",
+      detail: valid.length
+        ? `${valid.join(", ")} + lien e-mail`
+        : "lien e-mail uniquement",
+    });
+  }
+
   add({
     level: has("RESEND_API_KEY") ? "ok" : "warn",
     label: "E-mails (Resend)",

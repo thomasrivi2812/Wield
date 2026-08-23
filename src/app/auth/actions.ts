@@ -5,6 +5,7 @@ import { siteUrl } from "@/lib/env";
 import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { safeNext } from "@/lib/safe-next";
+import { PROVIDERS, enabledProviders, isProviderId } from "@/lib/auth-providers";
 
 export type AuthResult = { ok: boolean; message: string };
 
@@ -49,21 +50,37 @@ export async function signInWithEmail(
   };
 }
 
-/** OAuth Google. Redirige vers le fournisseur, qui revient sur /auth/callback. */
-export async function signInWithGoogle(formData: FormData): Promise<void> {
+/**
+ * Connexion OAuth, quel que soit le fournisseur.
+ *
+ * L'identifiant vient d'un champ de formulaire : on le vérifie contre le
+ * catalogue *et* contre la liste des fournisseurs activés. Sans ce double
+ * contrôle, une requête forgée déclencherait une redirection OAuth vers un
+ * fournisseur que le site n'a jamais prévu d'accepter.
+ */
+export async function signInWithProvider(formData: FormData): Promise<void> {
   const client = await supabaseServer();
   if (!client) redirect("/espace?auth=unconfigured");
 
+  const raw = String(formData.get("provider") ?? "");
+  if (!isProviderId(raw) || !enabledProviders().includes(raw)) {
+    console.error("[auth] fournisseur refusé", raw);
+    redirect("/espace?auth=provider");
+  }
+
+  const provider = PROVIDERS[raw];
   const next = safeNext(String(formData.get("next") ?? ""));
+
   const { data, error } = await client.auth.signInWithOAuth({
-    provider: "google",
+    provider: provider.id,
     options: {
       redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
+      ...(provider.scopes ? { scopes: provider.scopes } : {}),
     },
   });
 
   if (error || !data.url) {
-    console.error("[auth] google", error?.message);
+    console.error(`[auth] ${provider.id}`, error?.message);
     redirect("/espace?auth=failed");
   }
 

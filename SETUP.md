@@ -94,6 +94,34 @@ Le lien magique par e-mail marche sans rien configurer, mais Supabase limite
 fortement les envois par défaut : pour la production, branche un vrai
 expéditeur SMTP dans **Authentication → Emails**.
 
+### Choisir les autres moyens de connexion
+
+`NEXT_PUBLIC_AUTH_PROVIDERS` décide des boutons affichés, dans l'ordre :
+
+```bash
+NEXT_PUBLIC_AUTH_PROVIDERS=google,azure
+```
+
+| Valeur | Fournisseur | Ce que ça coûte |
+|---|---|---|
+| `google` | Google Workspace | gratuit |
+| `azure` | Microsoft 365 | gratuit, appli à déclarer sur Entra |
+| `linkedin_oidc` | LinkedIn | gratuit, appli à déclarer |
+| `github` | GitHub | gratuit |
+| `apple` | Apple | **99 €/an** de compte développeur |
+
+Chaque valeur doit **aussi** être activée dans **Authentication → Providers**.
+Le code n'affiche que ce que tu listes : un bouton qui mène à une erreur fait
+croire que le site est cassé.
+
+- Variable **absente** → `google` seul.
+- Variable **vide** → lien e-mail uniquement.
+
+> **Deux ou trois boutons, pas cinq.** Au-delà, le mur de connexion devient
+> un menu et la conversion baisse. Pour des dirigeants de PME françaises,
+> `google,azure` couvre la quasi-totalité du parc — Apple et GitHub ne
+> servent presque jamais dans ce contexte, et Apple se paie.
+
 ---
 
 ## 2. Les moteurs de réponse

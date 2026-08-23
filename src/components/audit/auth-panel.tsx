@@ -1,44 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { signInWithEmail, signInWithGoogle } from "@/app/auth/actions";
+import { signInWithEmail, signInWithProvider } from "@/app/auth/actions";
+import { ProviderMark } from "@/components/auth/provider-marks";
+import { PROVIDERS, parseEnabledProviders } from "@/lib/auth-providers";
 import { supabaseBrowser } from "@/lib/supabase/client";
-
-/**
- * Mur de connexion.
- *
- * Quand Supabase est branché, les boutons font une vraie authentification.
- * Sinon on garde le parcours de démonstration — et on le dit, plutôt que de
- * laisser croire qu'un compte a été créé.
- *
- * Marques en monochrome pour tenir la charte : avant mise en ligne, le bouton
- * Google doit repasser aux couleurs officielles imposées par Google.
- */
-function GoogleMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[1.125rem] w-[1.125rem]">
-      <path
-        fill="currentColor"
-        d="M12 10.2v3.9h5.5a4.7 4.7 0 0 1-2 3.1l3.2 2.5c1.9-1.7 3-4.3 3-7.3 0-.7-.1-1.4-.2-2.1H12Z"
-      />
-      <path
-        fill="currentColor"
-        opacity="0.75"
-        d="M6.3 14.3 5.6 15l-2.5 2A10 10 0 0 0 12 22c2.7 0 5-.9 6.7-2.4l-3.2-2.5c-.9.6-2 1-3.5 1a6 6 0 0 1-5.7-4.1Z"
-      />
-      <path
-        fill="currentColor"
-        opacity="0.5"
-        d="M3.1 7A10 10 0 0 0 2 12c0 1.8.4 3.5 1.1 5l3.2-2.7a6 6 0 0 1 0-3.8L3.1 7Z"
-      />
-      <path
-        fill="currentColor"
-        opacity="0.9"
-        d="M12 5.9c1.5 0 2.9.5 4 1.5l2.9-2.9A10 10 0 0 0 3.1 7l3.2 2.6A6 6 0 0 1 12 5.9Z"
-      />
-    </svg>
-  );
-}
 
 function MailMark() {
   return (
@@ -57,8 +23,16 @@ function MailMark() {
 }
 
 const BUTTON =
-  "flex h-12 items-center justify-center gap-3 rounded-sm border border-line-strong bg-surface font-display text-[0.9375rem] font-semibold text-ink transition-colors hover:border-ink hover:bg-bg";
+  "flex h-12 w-full items-center justify-center gap-3 rounded-sm border border-line-strong bg-surface font-display text-[0.9375rem] font-semibold text-ink transition-colors hover:border-ink hover:bg-bg";
 
+/**
+ * Mur de connexion.
+ *
+ * N'affiche que les fournisseurs déclarés dans NEXT_PUBLIC_AUTH_PROVIDERS :
+ * un bouton qui mène à une erreur fait croire que le site est cassé.
+ * Le lien e-mail est toujours proposé — il ne demande aucune configuration
+ * et reste le recours quand aucun fournisseur n'est activé.
+ */
 export function AuthPanel({
   next = "/espace",
   onDemoSignIn,
@@ -71,8 +45,15 @@ export function AuthPanel({
   lede?: string;
 }) {
   const configured = supabaseBrowser() !== null;
+  const providers = parseEnabledProviders(
+    process.env.NEXT_PUBLIC_AUTH_PROVIDERS,
+  );
   const [email, setEmail] = useState("");
   const [state, submitEmail, pending] = useActionState(signInWithEmail, null);
+
+  // Sans Supabase, on garde le parcours de démonstration mais on montre les
+  // mêmes fournisseurs, pour que la maquette reflète le produit visé.
+  const shown = providers;
 
   return (
     <div className="rounded-md border border-line bg-surface p-7 sm:p-9">
@@ -80,26 +61,36 @@ export function AuthPanel({
       <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">{lede}</p>
 
       <div className="mt-7 flex flex-col gap-3">
-        {configured ? (
-          <form action={signInWithGoogle}>
-            <input type="hidden" name="next" value={next} />
-            <button type="submit" className={`${BUTTON} w-full`}>
-              <GoogleMark />
-              Continuer avec Google
+        {shown.map((id) =>
+          configured ? (
+            <form key={id} action={signInWithProvider}>
+              <input type="hidden" name="provider" value={id} />
+              <input type="hidden" name="next" value={next} />
+              <button type="submit" className={BUTTON}>
+                <ProviderMark id={id} />
+                {PROVIDERS[id].label}
+              </button>
+            </form>
+          ) : (
+            <button
+              key={id}
+              type="button"
+              onClick={onDemoSignIn}
+              className={BUTTON}
+            >
+              <ProviderMark id={id} />
+              {PROVIDERS[id].label}
             </button>
-          </form>
-        ) : (
-          <button type="button" onClick={onDemoSignIn} className={BUTTON}>
-            <GoogleMark />
-            Continuer avec Google
-          </button>
+          ),
         )}
 
-        <div className="flex items-center gap-4 py-1">
-          <span className="h-px flex-1 bg-line" />
-          <span className="eyebrow text-absent">ou</span>
-          <span className="h-px flex-1 bg-line" />
-        </div>
+        {shown.length ? (
+          <div className="flex items-center gap-4 py-1">
+            <span className="h-px flex-1 bg-line" />
+            <span className="eyebrow text-absent">ou</span>
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        ) : null}
 
         <form
           action={configured ? submitEmail : undefined}
@@ -155,8 +146,8 @@ export function AuthPanel({
 
       <p className="mt-6 text-[0.75rem] leading-relaxed text-ink-soft">
         {configured
-          ? "Aucune carte demandée, aucune donnée revendue. Désinscription en un clic."
-          : "Connexion non branchée sur ce déploiement : ce bouton déroule la démonstration."}
+          ? "Pas de mot de passe à retenir. Aucune carte demandée, aucune donnée revendue."
+          : "Connexion non branchée sur ce déploiement : ces boutons déroulent la démonstration."}
       </p>
     </div>
   );
