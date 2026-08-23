@@ -20,9 +20,11 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+drop policy if exists "profil visible par son propriétaire" on public.profiles;
 create policy "profil visible par son propriétaire"
   on public.profiles for select using (auth.uid() = id);
 
+drop policy if exists "profil modifiable par son propriétaire" on public.profiles;
 create policy "profil modifiable par son propriétaire"
   on public.profiles for update using (auth.uid() = id);
 
@@ -48,8 +50,17 @@ create trigger on_auth_user_created
 
 -- --- Audits ----------------------------------------------------------------
 
-create type public.audit_status as enum ('pending', 'running', 'done', 'error');
-create type public.audit_tier   as enum ('free', 'report', 'action', 'seo');
+-- `create type` n'accepte pas `if not exists` : on garde le script rejouable.
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'audit_status') then
+    create type public.audit_status as enum ('pending', 'running', 'done', 'error');
+  end if;
+  if not exists (select 1 from pg_type where typname = 'audit_tier') then
+    create type public.audit_tier as enum ('free', 'report', 'action', 'seo');
+  end if;
+end
+$$;
 
 create table if not exists public.audits (
   id               uuid primary key default gen_random_uuid(),
@@ -73,6 +84,7 @@ create index if not exists audits_anon_idx on public.audits (anon_id, created_at
 
 alter table public.audits enable row level security;
 
+drop policy if exists "audits visibles par leur propriétaire" on public.audits;
 create policy "audits visibles par leur propriétaire"
   on public.audits for select using (auth.uid() = user_id);
 
@@ -90,6 +102,7 @@ create table if not exists public.audit_engines (
 
 alter table public.audit_engines enable row level security;
 
+drop policy if exists "résultats moteur visibles avec l'audit" on public.audit_engines;
 create policy "résultats moteur visibles avec l'audit"
   on public.audit_engines for select using (
     exists (
@@ -115,6 +128,7 @@ create index if not exists audit_prompts_audit_idx on public.audit_prompts (audi
 
 alter table public.audit_prompts enable row level security;
 
+drop policy if exists "détail des prompts visible avec l'audit" on public.audit_prompts;
 create policy "détail des prompts visible avec l'audit"
   on public.audit_prompts for select using (
     exists (
@@ -142,6 +156,7 @@ create index if not exists purchases_user_idx on public.purchases (user_id, crea
 
 alter table public.purchases enable row level security;
 
+drop policy if exists "achats visibles par leur propriétaire" on public.purchases;
 create policy "achats visibles par leur propriétaire"
   on public.purchases for select using (auth.uid() = user_id);
 
@@ -167,9 +182,11 @@ create index if not exists messages_thread_idx on public.messages (thread_id, cr
 alter table public.threads  enable row level security;
 alter table public.messages enable row level security;
 
+drop policy if exists "fil visible par son propriétaire" on public.threads;
 create policy "fil visible par son propriétaire"
   on public.threads for select using (auth.uid() = user_id);
 
+drop policy if exists "messages visibles par le propriétaire du fil" on public.messages;
 create policy "messages visibles par le propriétaire du fil"
   on public.messages for select using (
     exists (
@@ -178,6 +195,7 @@ create policy "messages visibles par le propriétaire du fil"
     )
   );
 
+drop policy if exists "le propriétaire peut écrire dans son fil" on public.messages;
 create policy "le propriétaire peut écrire dans son fil"
   on public.messages for insert with check (
     author = 'user'
