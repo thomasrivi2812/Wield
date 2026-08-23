@@ -86,3 +86,55 @@ Le site doit être son propre cas d'école :
   un Route Handler serveur (clés API côté serveur uniquement + rate-limiting).
 - Chiffres, témoignage, logos clients et photo de la section « Derrière Wield »
   sont des placeholders.
+
+## Backend
+
+### Mise en route
+
+```bash
+cp .env.example .env.local   # remplis ce dont tu as besoin
+npm run dev
+npm test                      # tests du moteur d'audit
+```
+
+Rien n'est obligatoire dans `.env.local` : chaque brique absente bascule en
+mode démonstration et le dit à l'écran, au lieu de casser le site ou —
+pire — d'inventer un résultat.
+
+### Base de données
+
+Le schéma vit dans `supabase/migrations/`. À appliquer avec
+`supabase db push`, ou collé dans l'éditeur SQL du tableau de bord.
+
+RLS est actif sur toutes les tables. Le navigateur ne lit que ce qui
+appartient au compte connecté ; les écritures d'audit et d'achat passent par
+la clé de service, côté serveur uniquement.
+
+### Moteur d'audit
+
+```
+src/lib/audit/
+  prompts.ts            les six questions posées, en langage d'acheteur
+  detect.ts             la marque est-elle citée ? (domaine, puis nom)
+  run.ts                orchestration, tolérance aux pannes, score
+  providers/
+    anthropic.ts        Claude — écrit et testé
+    pending.ts          ChatGPT, Perplexity, Gemini — à écrire
+```
+
+`POST /api/audit` avec `{ query, brand?, domain? }`. Limité à 3 audits par
+heure et par adresse IP : un audit consomme de vrais jetons chez quatre
+fournisseurs.
+
+**Un moteur non branché n'est jamais compté comme « absent ».** Il ressort en
+`not_configured` ou `not_implemented` et sort du score, qui se lit toujours
+« cités / mesurés ».
+
+### Ce que l'audit mesure vraiment
+
+Il interroge les **API** des moteurs, pas leurs applications grand public.
+Une API n'a ni mémoire, ni personnalisation, ni le même routage que
+chatgpt.com ou claude.ai : c'est un substitut reproductible et comparable
+dans le temps, pas une capture d'écran de ce que verra un client donné.
+Le site doit le dire tel quel — c'est la moindre des choses pour une offre
+qui vend de la méthode plutôt que de la magie.
