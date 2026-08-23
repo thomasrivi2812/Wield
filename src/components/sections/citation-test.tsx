@@ -17,11 +17,16 @@ const SAMPLE = [
 export function CitationTest() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [domain, setDomain] = useState("");
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
     const q = query.trim();
-    router.push(q ? `/audit?q=${encodeURIComponent(q)}` : "/audit");
+    if (!q) return router.push("/audit");
+    const d = domain.trim();
+    const params = new URLSearchParams({ q });
+    if (d) params.set("d", d);
+    router.push(`/audit?${params}`);
   }
 
   return (
@@ -61,8 +66,23 @@ export function CitationTest() {
                   Tester ma visibilité
                 </button>
               </div>
-              <p className="mt-3 text-[0.8125rem] text-ink-soft">
-                Le score s&apos;affiche tout de suite, sans compte ni carte
+              <label
+                htmlFor="domaine"
+                className="eyebrow mt-6 block text-ink-soft"
+              >
+                Ton site
+              </label>
+              <input
+                id="domaine"
+                name="d"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                placeholder="ma-boite.fr"
+                className="mt-3 h-[3.25rem] w-full rounded-sm border border-line-strong bg-surface px-4 text-[0.9375rem] text-ink placeholder:text-absent focus:border-cobalt focus:outline-none"
+              />
+              <p className="mt-3 text-[0.8125rem] leading-relaxed text-ink-soft">
+                Sans ton domaine, on voit qui est cité — mais pas si c&apos;est
+                toi. Le score s&apos;affiche tout de suite, sans compte ni carte
                 bancaire.
               </p>
             </form>

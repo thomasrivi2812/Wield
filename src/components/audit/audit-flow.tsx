@@ -1,48 +1,61 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import { IconCheck, IconCross } from "@/components/ui/icons";
 import { AuthPanel } from "./auth-panel";
 import { LockIcon, Masked, TierBadge } from "./lock";
-import { ACTIONS, ENGINES, PROMPTS, SEO_CHECKS } from "./data";
+import { ACTIONS, PROMPTS, SEO_CHECKS } from "./data";
+import {
+  isUnmeasured,
+  requestAudit,
+  type AuditState,
+  type AuditView,
+  type EngineView,
+} from "./api";
 
-type Phase = "scanning" | "ready";
-
-export function AuditFlow({ query }: { query: string }) {
-  const [phase, setPhase] = useState<Phase>("scanning");
-  const [scanned, setScanned] = useState(0);
+export function AuditFlow({
+  query,
+  domain,
+}: {
+  query: string;
+  domain?: string;
+}) {
+  const [state, setState] = useState<AuditState>({ phase: "scanning" });
   const [signedIn, setSignedIn] = useState(false);
   const [purchased, setPurchased] = useState<null | "geo" | "full">(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    ENGINES.forEach((_, i) => {
-      timers.current.push(setTimeout(() => setScanned(i + 1), 520 * (i + 1)));
-    });
-    timers.current.push(
-      setTimeout(() => setPhase("ready"), 520 * ENGINES.length + 400),
-    );
-    const t = timers.current;
-    return () => t.forEach(clearTimeout);
-  }, []);
+    const controller = new AbortController();
 
-  const score = ENGINES.filter((e) => e.cited).length;
-  const revealed = phase === "ready" ? ENGINES.length : scanned;
+    requestAudit({ query, domain }, controller.signal)
+      .then((data) => setState({ phase: "done", data }))
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setState({
+          phase: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "L\u2019audit a \u00e9chou\u00e9.",
+        });
+      });
+
+    return () => controller.abort();
+  }, [query, domain]);
 
   return (
     <div className="bg-bg">
       <Container>
         <div className="flex flex-col gap-6 py-14 lg:py-20">
-          <Header query={query} phase={phase} />
+          <Header query={query} state={state} />
 
-          <ScoreCard
-            score={score}
-            revealed={revealed}
-            phase={phase}
-            engines={ENGINES}
-          />
+          {state.phase === "error" ? (
+            <ErrorCard message={state.message} />
+          ) : (
+            <ScoreCard state={state} />
+          )}
 
           <ReportCard signedIn={signedIn} onSignedIn={() => setSignedIn(true)} />
 
@@ -55,7 +68,14 @@ export function AuditFlow({ query }: { query: string }) {
 
 /* ------------------------------------------------------------------ */
 
-function Header({ query, phase }: { query: string; phase: Phase }) {
+function Header({ query, state }: { query: string; state: AuditState }) {
+  const note =
+    state.phase === "scanning"
+      ? "Interrogation des moteurs de r\u00e9ponse sur six questions de ton secteur\u2026"
+      : state.phase === "error"
+        ? "L\u2019audit n\u2019a pas pu aboutir."
+        : `Six questions pos\u00e9es \u00e0 ${state.data.measuredCount || "aucun"} moteur${state.data.measuredCount > 1 ? "s" : ""} de r\u00e9ponse, \u00e0 l\u2019instant.`;
+
   return (
     <div className="flex flex-col gap-5 border-b border-line pb-8">
       <p className="eyebrow flex items-center gap-3 text-ink-soft">
@@ -72,26 +92,33 @@ function Header({ query, phase }: { query: string; phase: Phase }) {
         aria-live="polite"
         aria-atomic="true"
       >
-        {phase === "scanning"
-          ? "Interrogation de ChatGPT, Claude, Perplexity et Gemini sur six questions de ton secteur…"
-          : "Six questions posées aux quatre moteurs de réponse, à l’instant."}
+        {note}
       </p>
     </div>
   );
 }
 
+function ErrorCard({ message }: { message: string }) {
+  return (
+    <section className="rounded-md border border-line bg-surface p-8 sm:p-10">
+      <h2 className="text-[1.5rem] leading-snug">L’audit n’a pas abouti</h2>
+      <p className="mt-4 max-w-[56ch] text-[1rem] leading-relaxed text-ink-soft">
+        {message}
+      </p>
+      <div className="mt-7">
+        <Button href="/#test" variant="outline" size="md">
+          Relancer un audit
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 /* Niveau 0 — libre, sans compte : le score. C’est l’hameçon. */
-function ScoreCard({
-  score,
-  revealed,
-  phase,
-  engines,
-}: {
-  score: number;
-  revealed: number;
-  phase: Phase;
-  engines: typeof ENGINES;
-}) {
+function ScoreCard({ state }: { state: AuditState }) {
+  const data = state.phase === "done" ? state.data : null;
+  const scanning = state.phase === "scanning";
+
   return (
     <section className="rounded-md border border-line bg-surface">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-4 sm:px-9">
@@ -102,23 +129,47 @@ function ScoreCard({
         </TierBadge>
       </div>
 
-      <div className="flex flex-wrap items-end justify-between gap-6 px-6 pt-8 sm:px-9">
-        <p className="font-display text-[3.5rem] leading-none font-extrabold tracking-tight tabular-nums sm:text-[4.5rem]">
-          <span className={phase === "ready" ? "text-cobalt" : "text-absent"}>
-            {phase === "ready" ? score : "—"}
-          </span>
-          <span className="text-absent">/{engines.length}</span>
+      {data?.mode === "demo" ? (
+        <p className="border-b border-line bg-cobalt-soft px-6 py-3 text-[0.8125rem] leading-relaxed text-cobalt sm:px-9">
+          Aucun moteur n’est branché pour l’instant : ce résultat est une
+          démonstration. Les moteurs non mesurés sont signalés comme tels, jamais
+          comptés comme absents.
         </p>
-        <div className="flex gap-1.5" aria-hidden="true">
-          {engines.map((engine, i) => (
+      ) : null}
+
+      <div className="flex flex-wrap items-end justify-between gap-6 px-6 pt-8 sm:px-9">
+        <div>
+          <p className="font-display text-[3.5rem] leading-none font-extrabold tracking-tight tabular-nums sm:text-[4.5rem]">
             <span
-              key={engine.name}
+              className={
+                data && data.measuredCount > 0 ? "text-cobalt" : "text-absent"
+              }
+            >
+              {data && data.measuredCount > 0 ? data.citedCount : "—"}
+            </span>
+            <span className="text-absent">
+              /{data && data.measuredCount > 0 ? data.measuredCount : "—"}
+            </span>
+          </p>
+          <p className="mt-3 text-[0.8125rem] text-ink-soft">
+            {data && data.measuredCount > 0
+              ? `moteurs qui te citent, sur ${data.measuredCount} mesuré${data.measuredCount > 1 ? "s" : ""}`
+              : "moteurs qui te citent, sur ceux réellement mesurés"}
+          </p>
+        </div>
+
+        <div className="flex gap-1.5" aria-hidden="true">
+          {(data?.engines ?? PLACEHOLDER).map((engine, i) => (
+            <span
+              key={engine.engine ?? i}
               className={`h-1.5 w-14 rounded-full transition-colors duration-300 ${
-                i < revealed
-                  ? engine.cited
+                !data
+                  ? "bg-line"
+                  : engine.status === "cited"
                     ? "bg-present"
-                    : "bg-absent"
-                  : "bg-line"
+                    : engine.status === "absent"
+                      ? "bg-absent"
+                      : "bg-line"
               }`}
             />
           ))}
@@ -126,62 +177,102 @@ function ScoreCard({
       </div>
 
       <ul className="mt-8 px-6 pb-2 sm:px-9">
-        {engines.map((engine, i) => {
-          const shown = i < revealed;
-          return (
-            <li
-              key={engine.name}
-              className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line py-4"
-            >
-              <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xs border transition-colors ${
-                  !shown
-                    ? "border-line text-line-strong"
-                    : engine.cited
-                      ? "border-cobalt bg-cobalt text-white"
-                      : "border-line-strong text-absent"
-                }`}
-              >
-                {shown ? (
-                  engine.cited ? (
-                    <IconCheck className="h-3.5 w-3.5" />
-                  ) : (
-                    <IconCross className="h-3.5 w-3.5" />
-                  )
-                ) : (
-                  <span className="h-1 w-1 rounded-full bg-current" />
-                )}
-              </span>
-
-              <span className="font-display text-[1.0625rem] font-semibold">
-                {engine.name}
-              </span>
-
-              <span
-                className={`ml-auto text-right text-[0.875rem] ${
-                  shown && engine.cited ? "text-cobalt" : "text-absent"
-                }`}
-              >
-                {!shown
-                  ? "analyse…"
-                  : engine.cited
-                    ? `Cité — ${engine.detail}`
-                    : "Absent"}
-              </span>
-            </li>
-          );
-        })}
+        {(data?.engines ?? PLACEHOLDER).map((engine, i) => (
+          <EngineRow
+            key={engine.engine ?? i}
+            engine={engine}
+            scanning={scanning}
+          />
+        ))}
       </ul>
 
-      {phase === "ready" ? (
+      {data ? (
         <p className="border-t border-line px-6 py-5 text-[0.9375rem] leading-relaxed text-ink-soft sm:px-9">
-          <span className="font-display font-semibold text-ink">
-            Trois moteurs sur quatre ne te connaissent pas.
-          </span>{" "}
-          Le détail est juste en dessous.
+          {data.measuredCount === 0 ? (
+            "Aucun moteur n’a pu être interrogé. Le détail par moteur est juste au-dessus."
+          ) : data.citedCount === 0 ? (
+            <>
+              <span className="font-display font-semibold text-ink">
+                Aucun des moteurs mesurés ne te connaît.
+              </span>{" "}
+              Le détail est juste en dessous.
+            </>
+          ) : (
+            <>
+              <span className="font-display font-semibold text-ink">
+                {data.citedCount} moteur{data.citedCount > 1 ? "s" : ""} sur{" "}
+                {data.measuredCount} te cite
+                {data.citedCount > 1 ? "nt" : ""}.
+              </span>{" "}
+              Le détail est juste en dessous.
+            </>
+          )}
         </p>
       ) : null}
     </section>
+  );
+}
+
+/** Squelette affiché pendant le scan, avant toute réponse. */
+const PLACEHOLDER = [
+  { engine: "chatgpt", label: "ChatGPT" },
+  { engine: "claude", label: "Claude" },
+  { engine: "perplexity", label: "Perplexity" },
+  { engine: "gemini", label: "Gemini" },
+] as Array<Partial<EngineView> & { engine: string; label: string }>;
+
+function EngineRow({
+  engine,
+  scanning,
+}: {
+  engine: Partial<EngineView> & { engine: string; label: string };
+  scanning: boolean;
+}) {
+  const status = engine.status;
+  const cited = status === "cited";
+  const absent = status === "absent";
+  const unmeasured = status ? isUnmeasured(status) : false;
+
+  return (
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line py-4">
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xs border transition-colors ${
+          cited
+            ? "border-cobalt bg-cobalt text-white"
+            : absent
+              ? "border-line-strong text-absent"
+              : "border-line text-line-strong"
+        }`}
+      >
+        {cited ? (
+          <IconCheck className="h-3.5 w-3.5" />
+        ) : absent ? (
+          <IconCross className="h-3.5 w-3.5" />
+        ) : (
+          <span className="h-1 w-1 rounded-full bg-current" />
+        )}
+      </span>
+
+      <span className="font-display text-[1.0625rem] font-semibold">
+        {engine.label}
+      </span>
+
+      <span
+        className={`ml-auto text-right text-[0.875rem] ${
+          cited ? "text-cobalt" : "text-absent"
+        }`}
+      >
+        {scanning || !status
+          ? "analyse…"
+          : cited
+            ? `Cité — ${engine.detail}`
+            : absent
+              ? "Absent"
+              : unmeasured
+                ? `Non mesuré — ${engine.detail}`
+                : `Erreur — ${engine.detail}`}
+      </span>
+    </li>
   );
 }
 

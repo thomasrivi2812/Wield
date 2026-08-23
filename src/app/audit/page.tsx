@@ -14,10 +14,11 @@ export const metadata: Metadata = {
 export default async function AuditPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; d?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, d } = await searchParams;
   const query = q?.trim() || "Ton secteur";
+  const domain = d?.trim() || undefined;
 
   return (
     <>
@@ -27,14 +28,14 @@ export default async function AuditPage({
       <div className="border-b border-line bg-cobalt-soft">
         <Container>
           <p className="py-2.5 text-[0.8125rem] text-cobalt">
-            Maquette — les résultats sont simulés et le paiement n&apos;est pas
-            branché.
+            Le score vient des moteurs réellement interrogés. Le rapport
+            détaillé et le paiement ne sont pas encore branchés.
           </p>
         </Container>
       </div>
 
       <main>
-        <AuditFlow query={query} />
+        <AuditFlow query={query} domain={domain} />
       </main>
 
       <SiteFooter />

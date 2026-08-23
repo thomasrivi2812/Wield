@@ -12,10 +12,16 @@ import type {
 /** Au-delà, on rend la main : mieux vaut un moteur en erreur qu'une page qui pend. */
 const ENGINE_TIMEOUT_MS = 90_000;
 
-export async function runAudit(input: AuditInput): Promise<AuditResult> {
+/**
+ * @param engineList injectable pour les tests ; en production, le registre.
+ */
+export async function runAudit(
+  input: AuditInput,
+  engineList: EngineAdapter[] = adapters(),
+): Promise<AuditResult> {
   const prompts = buildPrompts(input.query);
   const engines = await Promise.all(
-    adapters().map((adapter) => runEngine(adapter, prompts, input)),
+    engineList.map((adapter) => runEngine(adapter, prompts, input)),
   );
 
   const measured = engines.filter(
