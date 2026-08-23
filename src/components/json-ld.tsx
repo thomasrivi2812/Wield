@@ -58,7 +58,7 @@ const graph = {
           name: "Qu'est-ce que le GEO (Generative Engine Optimization) ?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Le GEO consiste à rendre une marque citable par les moteurs de réponse comme ChatGPT, Claude, Perplexity et Gemini. Contrairement au SEO qui vise un classement de liens, le GEO vise la présence dans la réponse générée et parmi les sources citées.",
+            text: "Le GEO, c'est le référencement appliqué aux IA. Le SEO classe une marque dans une liste de liens ; le GEO la fait citer dans la réponse que l'IA rédige. Une IA ne classe pas des pages : elle cherche des faits vérifiables, dans des sources qu'elle juge fiables, et cite celles qui répondent le plus directement à la question posée.",
           },
         },
         {

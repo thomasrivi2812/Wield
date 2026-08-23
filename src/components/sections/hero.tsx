@@ -3,12 +3,6 @@ import { Container } from "@/components/ui/container";
 import { Em } from "@/components/ui/em";
 import { IconCross } from "@/components/ui/icons";
 
-const REASSURANCE = [
-  "Audit sous 48 h",
-  "Sans engagement",
-  "Données hébergées en Europe",
-];
-
 export function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-line">
@@ -20,25 +14,20 @@ export function Hero() {
         <div className="grid items-center gap-14 py-20 lg:grid-cols-12 lg:gap-16 lg:py-28">
           {/* Colonne éditoriale */}
           <div className="min-w-0 lg:col-span-7">
-            <p className="eyebrow flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
-              <span className="text-cobalt">GEO / AEO</span>
-              <span
-                aria-hidden="true"
-                className="hidden h-px w-8 bg-line-strong sm:block"
-              />
-              <span>Visibilité sur les moteurs de réponse</span>
-            </p>
-
-            <h1 className="mt-7 text-[2.375rem] leading-[1.03] sm:text-[3.25rem] lg:text-[4.25rem] xl:text-[4.75rem]">
+            <h1 className="text-[2.375rem] leading-[1.03] sm:text-[3.25rem] lg:text-[4.25rem] xl:text-[4.75rem]">
               Tes clients demandent à l&apos;IA.
               <br />
               Es-tu <Em>dans la réponse</Em> ?
             </h1>
 
             <p className="mt-7 max-w-[52ch] text-lg leading-[1.6] text-ink-soft">
-              Wield rend ta PME visible et recommandée sur ChatGPT, Claude,
-              Perplexity et Gemini — et t&apos;apprend à manier l&apos;IA au
-              quotidien. Sans slides, sans jargon.
+              Wield s&apos;occupe de ton{" "}
+              <strong className="font-semibold text-cobalt">
+                référencement sur les IA
+              </strong>{" "}
+              : être visible et recommandé sur ChatGPT, Claude, Perplexity et
+              Gemini — et savoir manier l&apos;IA au quotidien. Sans slides,
+              sans jargon.
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
@@ -47,20 +36,6 @@ export function Hero() {
               </Button>
               <QuietLink href="#brief">Recevoir la veille</QuietLink>
             </div>
-
-            <ul className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-[0.8125rem] text-ink-soft">
-              {REASSURANCE.map((item, i) => (
-                <li key={item} className="flex items-center gap-6">
-                  {i > 0 ? (
-                    <span
-                      aria-hidden="true"
-                      className="hidden h-3 w-px bg-line-strong sm:block"
-                    />
-                  ) : null}
-                  {item}
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Colonne démonstration : la réponse de l'IA, sans toi dedans */}
@@ -74,9 +49,9 @@ export function Hero() {
 }
 
 const SOURCES = [
-  { name: "Concurrent A", domain: "concurrent-a.fr", cited: true },
-  { name: "Concurrent B", domain: "concurrent-b.com", cited: true },
-  { name: "Annuaire régional", domain: "annuaire-pro.fr", cited: true },
+  { name: "Concurrent A", domain: "concurrent-a.fr" },
+  { name: "Concurrent B", domain: "concurrent-b.com" },
+  { name: "Annuaire régional", domain: "annuaire-pro.fr" },
 ];
 
 function AnswerPanel() {

@@ -62,7 +62,7 @@ export function Offers() {
     <section id="offres" className="scroll-mt-20 border-b border-line bg-surface">
       <Container>
         <div className="py-20 lg:py-24">
-          <Eyebrow index="05">Les offres</Eyebrow>
+          <Eyebrow>Les offres</Eyebrow>
 
           <h2 className="mt-7 max-w-[18ch] text-[2.5rem] leading-[1.04] sm:text-[3rem] lg:text-[3.5rem]">
             Trois façons de <Em>travailler</Em> avec Wield

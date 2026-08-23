@@ -16,13 +16,16 @@ export function FinalCta() {
         <div className="flex flex-col items-center py-24 text-center lg:py-32">
           <p className="eyebrow text-cobalt-light">Prochaine étape</p>
 
-          <h2 className="mt-7 max-w-[16ch] text-[2.5rem] leading-[1.03] sm:text-[3.25rem] lg:text-[4rem]">
-            Découvre si tes clients <Em onDark>te trouvent</Em> sur l&apos;IA.
+          <h2 className="mt-7 max-w-[20ch] text-[2.375rem] leading-[1.06] sm:text-[3rem] lg:text-[3.5rem]">
+            Découvre si tes clients te trouvent sur l&apos;IA.
+            <br />
+            Puis <Em onDark>booste ton référencement</Em>.
           </h2>
 
-          <p className="mt-7 max-w-[52ch] text-[1.0625rem] leading-[1.65] text-ink-invert-soft">
-            On scanne les quatre moteurs sur les questions de ton secteur, et on
-            te dit exactement où tu te situes. Trente minutes, sans engagement.
+          <p className="mt-7 max-w-[54ch] text-[1.0625rem] leading-[1.65] text-ink-invert-soft">
+            On scanne les quatre moteurs sur les questions de ton secteur, on te
+            dit exactement où tu te situes — et on te remonte dans les réponses.
+            Trente minutes, sans engagement.
           </p>
 
           <div className="mt-11">

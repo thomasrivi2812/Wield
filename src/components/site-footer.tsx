@@ -23,7 +23,7 @@ const COLUMNS = [
   {
     title: "Wield",
     links: [
-      { label: "À propos", href: "#apropos" },
+      { label: "C\u2019est quoi le GEO", href: "#geo" },
       { label: "Contact", href: "#cta" },
       { label: "Mentions légales", href: "#" },
     ],

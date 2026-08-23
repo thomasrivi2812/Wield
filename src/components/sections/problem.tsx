@@ -15,7 +15,7 @@ export function Problem() {
       <Container className="relative">
         <div className="grid gap-14 py-20 lg:grid-cols-12 lg:gap-16 lg:py-28">
           <div className="lg:col-span-7">
-            <Eyebrow index="01" onDark>
+            <Eyebrow onDark>
               Le problème
             </Eyebrow>
 

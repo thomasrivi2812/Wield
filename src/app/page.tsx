@@ -3,11 +3,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { Hero } from "@/components/sections/hero";
 import { Problem } from "@/components/sections/problem";
 import { CitationTest } from "@/components/sections/citation-test";
-import { Method } from "@/components/sections/method";
-import { Proof } from "@/components/sections/proof";
+import { Geo } from "@/components/sections/geo";
+import { Stat } from "@/components/sections/stat";
 import { Offers } from "@/components/sections/offers";
-import { Trust } from "@/components/sections/trust";
-import { About } from "@/components/sections/about";
 import { FinalCta } from "@/components/sections/final-cta";
 import { HomeJsonLd } from "@/components/json-ld";
 
@@ -27,11 +25,9 @@ export default function HomePage() {
         <Hero />
         <Problem />
         <CitationTest />
-        <Method />
-        <Proof />
+        <Geo />
+        <Stat />
         <Offers />
-        <Trust />
-        <About />
         <FinalCta />
       </main>
 

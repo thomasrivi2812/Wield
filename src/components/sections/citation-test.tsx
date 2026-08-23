@@ -55,7 +55,7 @@ export function CitationTest() {
         <div className="grid gap-14 py-20 lg:grid-cols-12 lg:gap-16 lg:py-24">
           {/* Intro + formulaire */}
           <div className="lg:col-span-5">
-            <Eyebrow index="02">L&apos;outil</Eyebrow>
+            <Eyebrow>L&apos;outil</Eyebrow>
 
             <h2 className="mt-7 text-[2.5rem] leading-[1.05] sm:text-[2.75rem] lg:text-[3.25rem]">
               Es-tu <Em>cité par les IA</Em> ? Teste en 30 secondes.

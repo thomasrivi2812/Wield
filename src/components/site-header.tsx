@@ -7,11 +7,10 @@ import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
+  { label: "Le GEO", href: "#geo" },
   { label: "Radar", href: "#offres" },
   { label: "Studio", href: "#offres" },
   { label: "Playbooks", href: "#offres" },
-  { label: "Méthode", href: "#methode" },
-  { label: "Preuves", href: "#preuve" },
 ];
 
 export function SiteHeader() {

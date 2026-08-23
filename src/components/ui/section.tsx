@@ -29,11 +29,9 @@ export function Section({
 }
 
 export function Eyebrow({
-  index,
   onDark = false,
   children,
 }: {
-  index?: string;
   onDark?: boolean;
   children: React.ReactNode;
 }) {
@@ -44,17 +42,9 @@ export function Eyebrow({
         onDark ? "text-ink-invert-soft" : "text-ink-soft",
       )}
     >
-      {index ? (
-        <span className={onDark ? "text-cobalt-light" : "text-cobalt"}>
-          {index}
-        </span>
-      ) : null}
       <span
         aria-hidden="true"
-        className={cn(
-          "h-px w-8",
-          onDark ? "bg-line-invert" : "bg-line-strong",
-        )}
+        className={cn("h-px w-8", onDark ? "bg-line-invert" : "bg-cobalt")}
       />
       {children}
     </p>
@@ -63,7 +53,6 @@ export function Eyebrow({
 
 export function SectionHeading({
   eyebrow,
-  index,
   title,
   lede,
   onDark = false,
@@ -71,7 +60,6 @@ export function SectionHeading({
   className,
 }: {
   eyebrow?: string;
-  index?: string;
   title: React.ReactNode;
   lede?: React.ReactNode;
   onDark?: boolean;
@@ -87,9 +75,7 @@ export function SectionHeading({
       )}
     >
       {eyebrow ? (
-        <Eyebrow index={index} onDark={onDark}>
-          {eyebrow}
-        </Eyebrow>
+        <Eyebrow onDark={onDark}>{eyebrow}</Eyebrow>
       ) : null}
       <h2
         className={cn(
