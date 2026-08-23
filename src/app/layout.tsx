@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s · Wield",
   },
   description:
-    "Wield rend ta PME visible et recommandée sur ChatGPT, Claude, Perplexity et Gemini — et t'apprend à manier l'IA au quotidien. Audit de visibilité IA gratuit.",
+    "Wield rend ta PME visible et recommandée sur ChatGPT, Claude, Perplexity et Gemini — et t'apprend à manier l'IA au quotidien. Teste ta visibilité en deux minutes.",
   keywords: [
     "GEO",
     "AEO",

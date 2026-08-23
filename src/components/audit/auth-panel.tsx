@@ -37,7 +37,7 @@ export function AuthPanel({
   next = "/espace",
   onDemoSignIn,
   title = "Crée ton compte pour voir le rapport",
-  lede = "Gratuit, sans carte bancaire. Tu récupères les six prompts testés, qui est cité à ta place, et ton taux de citation moteur par moteur.",
+  lede = "Sans carte bancaire. Tu récupères les six prompts testés, qui est cité à ta place, et ton taux de citation moteur par moteur.",
 }: {
   next?: string;
   onDemoSignIn?: () => void;

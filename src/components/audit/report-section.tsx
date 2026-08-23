@@ -14,7 +14,7 @@ const LABELS = {
 /**
  * Le rapport : les questions réellement posées, et qui est ressorti dessus.
  *
- * Gratuit, mais contre un compte. Quand le visiteur n'est pas connecté, le
+ * Inclus avec le compte. Quand le visiteur n'est pas connecté, le
  * tableau n'est pas rendu du tout : on montre une silhouette fabriquée à
  * partir des seules questions, sans les réponses. Flouter du vrai contenu
  * dans le HTML revient à le donner.
@@ -39,7 +39,7 @@ export function ReportSection({
           ) : (
             <LockIcon className="h-3 w-3" />
           )}
-          Gratuit avec un compte
+          Inclus avec ton compte
         </TierBadge>
       </div>
 
@@ -64,7 +64,7 @@ export function ReportSection({
               <AuthPanel
                 next={`/audit/${auditId}`}
                 title="Crée ton compte pour voir le détail"
-                lede="Gratuit, sans carte bancaire. Tu récupères les questions posées, qui est cité à ta place sur chacune, et ton rang quand tu ressors."
+                lede="Sans carte bancaire. Tu récupères les questions posées, qui est cité à ta place sur chacune, et ton rang quand tu ressors."
               />
             </div>
           </div>

@@ -38,7 +38,7 @@ export function Hero() {
               style={{ animationDelay: "180ms" }}
             >
               <Button href="#test" size="lg">
-                Audit de visibilité IA — gratuit
+                Tester ma visibilité IA
               </Button>
               <QuietLink href="#brief">Recevoir la veille</QuietLink>
             </div>

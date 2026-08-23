@@ -31,7 +31,7 @@ export function FinalCta() {
 
           <div className="mt-11">
             <Button href="#test" size="lg" className="px-9">
-              Audit de visibilité IA — gratuit
+              Lancer mon audit de visibilité
             </Button>
           </div>
 

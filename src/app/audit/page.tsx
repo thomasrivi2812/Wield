@@ -86,8 +86,8 @@ function SignInFirst({ query, domain }: { query: string; domain?: string }) {
             </h1>
 
             <p className="mt-7 max-w-[52ch] text-[1.0625rem] leading-[1.7] text-ink-soft">
-              Ton audit est prêt à partir. Crée ton compte pour le lancer —
-              c’est gratuit et sans carte bancaire.
+              Ton audit est prêt à partir. Crée ton compte pour le lancer.
+              Aucune carte bancaire demandée.
             </p>
 
             <div className="mt-8 border-t border-line pt-7">

@@ -28,7 +28,7 @@ const OFFERS: Offer[] = [
       "Optimisation du contenu et des données",
       "Rapport mensuel, IA par IA",
     ],
-    cta: "Demander l'audit gratuit",
+    cta: "Lancer mon audit",
     href: "/#test",
     featured: true,
   },

@@ -65,7 +65,7 @@ export function SiteHeader() {
               Se connecter
             </Link>
             <Button href="/#test" size="md">
-              Audit gratuit
+              Tester ma visibilité
             </Button>
           </div>
 
@@ -129,7 +129,7 @@ export function SiteHeader() {
               Se connecter
             </Link>
             <Button href="/#test" size="lg" className="mt-4 w-full">
-              Audit de visibilité IA — gratuit
+              Tester ma visibilité IA
             </Button>
           </Container>
         </div>
