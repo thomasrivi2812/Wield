@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Archivo, Public_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+/* Archivo : grotesque industrielle, vraies italiques dessinées. */
+const archivo = Archivo({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  weight: ["500", "600", "700", "800"],
+  style: ["normal", "italic"],
+  variable: "--font-archivo",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const publicSans = Public_Sans({
   subsets: ["latin"],
   display: "swap",
-  weight: ["500", "600", "700"],
-  variable: "--font-space-grotesk",
+  weight: ["400", "500", "600"],
+  variable: "--font-public-sans",
 });
 
 export const metadata: Metadata = {
@@ -45,7 +48,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="fr" className={`${publicSans.variable} ${archivo.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

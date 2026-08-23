@@ -6,6 +6,7 @@ import { CitationTest } from "@/components/sections/citation-test";
 import { Geo } from "@/components/sections/geo";
 import { Stat } from "@/components/sections/stat";
 import { Offers } from "@/components/sections/offers";
+import { Guides } from "@/components/sections/guides";
 import { FinalCta } from "@/components/sections/final-cta";
 import { HomeJsonLd } from "@/components/json-ld";
 
@@ -28,6 +29,7 @@ export default function HomePage() {
         <Geo />
         <Stat />
         <Offers />
+        <Guides />
         <FinalCta />
       </main>
 

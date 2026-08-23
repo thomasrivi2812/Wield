@@ -9,7 +9,7 @@ const COLUMNS = [
     links: [
       { label: "Radar", href: "#offres" },
       { label: "Studio", href: "#offres" },
-      { label: "Playbooks", href: "#offres" },
+      { label: "Playbooks", href: "#guides" },
     ],
   },
   {
@@ -17,7 +17,7 @@ const COLUMNS = [
     links: [
       { label: "Le Brief", href: "#brief" },
       { label: "Comparateur de prix des IA", href: "#brief" },
-      { label: "Guides par métier", href: "#offres" },
+      { label: "Guides par métier", href: "#guides" },
     ],
   },
   {

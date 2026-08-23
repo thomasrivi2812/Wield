@@ -7,10 +7,9 @@ import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
-  { label: "Le GEO", href: "#geo" },
-  { label: "Radar", href: "#offres" },
-  { label: "Studio", href: "#offres" },
-  { label: "Playbooks", href: "#offres" },
+  { label: "Le GEO", href: "/#geo" },
+  { label: "Offres", href: "/#offres" },
+  { label: "Guides", href: "/#guides" },
 ];
 
 export function SiteHeader() {
@@ -39,12 +38,12 @@ export function SiteHeader() {
 
           <div className="hidden items-center gap-5 lg:flex">
             <Link
-              href="#brief"
+              href="/#brief"
               className="text-[0.9375rem] text-ink-soft transition-colors hover:text-ink"
             >
               Recevoir la veille
             </Link>
-            <Button href="#test" size="md">
+            <Button href="/#test" size="md">
               Audit gratuit
             </Button>
           </div>
@@ -93,7 +92,7 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
-            <Button href="#test" size="lg" className="mt-4 w-full">
+            <Button href="/#test" size="lg" className="mt-4 w-full">
               Audit de visibilité IA — gratuit
             </Button>
           </Container>
