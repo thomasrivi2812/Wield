@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { AuditFlow } from "@/components/audit/audit-flow";
+import { stripe } from "@/lib/env";
 import { Container } from "@/components/ui/container";
 
 export const metadata: Metadata = {
@@ -24,15 +25,17 @@ export default async function AuditPage({
     <>
       <SiteHeader />
 
-      {/* Repère de chantier : à retirer quand l'API et Stripe seront branchés. */}
-      <div className="border-b border-line bg-cobalt-soft">
-        <Container>
-          <p className="py-2.5 text-[0.8125rem] text-cobalt">
-            Le score vient des moteurs réellement interrogés. Le rapport
-            détaillé et le paiement ne sont pas encore branchés.
-          </p>
-        </Container>
-      </div>
+      {/* Le bandeau dit ce qui est réellement branché, pas ce qu'on espère. */}
+      {stripe.configured ? null : (
+        <div className="border-b border-line bg-cobalt-soft">
+          <Container>
+            <p className="py-2.5 text-[0.8125rem] text-cobalt">
+              Le score vient des moteurs réellement interrogés. Le paiement
+              n’est pas encore activé sur ce déploiement.
+            </p>
+          </Container>
+        </div>
+      )}
 
       <main>
         <AuditFlow query={query} domain={domain} />

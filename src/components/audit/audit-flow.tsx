@@ -8,6 +8,8 @@ import { AuthPanel } from "./auth-panel";
 import { LockIcon, Masked, TierBadge } from "./lock";
 import { ACTIONS, PROMPTS, SEO_CHECKS } from "./data";
 import { anonId } from "@/lib/anon-id";
+import { CheckoutButton } from "@/components/checkout-button";
+import { CATALOG, formatPrice, type Sku } from "@/lib/catalog";
 import {
   isUnmeasured,
   requestAudit,
@@ -392,8 +394,7 @@ function PaidTiers({
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <TierCard
-          name="Plan d’action GEO"
-          price="2,99 €"
+          sku="report_geo"
           note="paiement unique"
           pitch="Ce qu’il faut corriger pour être cité, priorisé par impact."
           bullets={[
@@ -407,8 +408,7 @@ function PaidTiers({
         />
 
         <TierCard
-          name="Audit SEO + GEO"
-          price="10 €"
+          sku="audit_seo_geo"
           note="paiement unique"
           pitch="Le plan d’action GEO, plus l’audit technique de ton site."
           bullets={[
@@ -437,8 +437,7 @@ function PaidTiers({
 }
 
 function TierCard({
-  name,
-  price,
+  sku,
   note,
   pitch,
   bullets,
@@ -447,8 +446,7 @@ function TierCard({
   onBuy,
   featured = false,
 }: {
-  name: string;
-  price: string;
+  sku: Sku;
   note: string;
   pitch: string;
   bullets: string[];
@@ -457,6 +455,10 @@ function TierCard({
   onBuy: () => void;
   featured?: boolean;
 }) {
+  const product = CATALOG[sku];
+  const name = product.name;
+  const price = formatPrice(product.amountCents);
+
   return (
     <article
       className={`flex flex-col rounded-md border bg-surface ${
@@ -500,15 +502,12 @@ function TierCard({
             Débloqué
           </p>
         ) : (
-          <Button
-            onClick={onBuy}
-            size="lg"
+          <CheckoutButton
+            sku={sku}
+            label={`Débloquer pour ${price}`}
             variant={featured ? "primary" : "outline"}
-            className="w-full"
-          >
-            <LockIcon className="h-4 w-4" />
-            Débloquer pour {price}
-          </Button>
+            onDemo={onBuy}
+          />
         )}
       </div>
     </article>

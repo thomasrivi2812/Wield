@@ -135,7 +135,43 @@ Le parcours complet :
 
 ---
 
-## 4. Mettre en ligne
+## 4. Stripe — les paiements
+
+Optionnel : sans clé, les boutons d'achat le disent au lieu d'échouer en
+silence.
+
+1. [dashboard.stripe.com](https://dashboard.stripe.com) → reste en **mode
+   test** tant que tu n'as pas vérifié le parcours.
+2. **Developers → API keys** → copie la clé secrète `sk_test_…` dans
+   `STRIPE_SECRET_KEY`.
+3. **Developers → Webhooks → Add endpoint** :
+   - URL : `https://<ton-domaine>/api/stripe/webhook`
+   - Événement : `checkout.session.completed`
+   - Copie le secret `whsec_…` dans `STRIPE_WEBHOOK_SECRET`.
+
+> **Sans le webhook, aucun achat ne sera jamais marqué payé.** La page de
+> succès n'est qu'un affichage : n'importe qui peut l'atteindre en tapant
+> l'URL. Seule la signature de Stripe fait foi. `npm run doctor` traite un
+> webhook manquant comme un échec, pas comme un avertissement.
+
+En local, pour recevoir les webhooks sans domaine public :
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+La commande affiche un secret `whsec_…` temporaire à mettre dans
+`.env.local`. Cartes de test : `4242 4242 4242 4242`, n'importe quelle date
+future, n'importe quel CVC.
+
+**Les prix vivent dans `src/lib/catalog.ts`**, et nulle part ailleurs. La
+session de paiement lit le même fichier que les pages : impossible
+d'afficher 2,99 € et d'encaisser autre chose. Pour changer un prix, tu
+changes une ligne.
+
+---
+
+## 5. Mettre en ligne
 
 Sur Vercel : importe le dépôt, puis **Settings → Environment Variables** —
 recopie tout `.env.local`, en changeant `NEXT_PUBLIC_SITE_URL` pour ton vrai
@@ -149,9 +185,10 @@ dans **Settings → Functions**, ou change le texte.
 
 ## Ce qui n'est pas encore branché
 
-- **Stripe** — les boutons de paiement ne font rien.
 - **Resend** — le formulaire d'infrastructure n'envoie pas d'e-mail.
-- **Le rapport détaillé** — il est écrit en base, pas encore servi à l'écran.
+- **Le rapport détaillé** — il est écrit en base, et l'achat est enregistré,
+  mais le contenu payant n'est pas encore servi à l'écran.
+- **L'audit automatique mensuel** du pack.
 
 ---
 

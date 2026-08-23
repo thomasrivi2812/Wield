@@ -301,11 +301,31 @@ function checkOptional() {
         },
   );
 
-  add({
-    level: has("STRIPE_SECRET_KEY") ? "ok" : "warn",
-    label: "Stripe",
-    detail: has("STRIPE_SECRET_KEY") ? "clé présente" : "pas encore branché",
-  });
+  if (!has("STRIPE_SECRET_KEY")) {
+    add({ level: "warn", label: "Stripe", detail: "pas branché — les boutons d'achat le disent" });
+  } else if (env.STRIPE_SECRET_KEY!.startsWith("pk_")) {
+    add({
+      level: "fail",
+      label: "Stripe",
+      detail: "clé publiable utilisée comme clé secrète",
+      fix: "STRIPE_SECRET_KEY attend une clé sk_… (Developers > API keys).",
+    });
+  } else if (!has("STRIPE_WEBHOOK_SECRET")) {
+    add({
+      level: "fail",
+      label: "Stripe — webhook",
+      detail: "secret absent : aucun achat ne sera jamais marqué payé",
+      fix: "Crée le webhook vers /api/stripe/webhook (événement checkout.session.completed) et copie son secret whsec_… dans STRIPE_WEBHOOK_SECRET.",
+    });
+  } else {
+    add({
+      level: env.STRIPE_SECRET_KEY!.startsWith("sk_live_") ? "warn" : "ok",
+      label: "Stripe",
+      detail: env.STRIPE_SECRET_KEY!.startsWith("sk_live_")
+        ? "clé de PRODUCTION : les paiements sont réels"
+        : "clé de test, webhook configuré",
+    });
+  }
   add({
     level: has("RESEND_API_KEY") ? "ok" : "warn",
     label: "E-mails (Resend)",

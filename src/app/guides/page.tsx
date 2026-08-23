@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { PageShell, PageHeader } from "@/components/page-shell";
 import { Container } from "@/components/ui/container";
-import { Button, QuietLink } from "@/components/ui/button";
 import { IconCheck } from "@/components/ui/icons";
+import { CheckoutButton } from "@/components/checkout-button";
+import { CATALOG, GUIDE_SKUS, formatPrice, packListPrice } from "@/lib/catalog";
+import { stripe } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Guides IA et GEO",
@@ -10,45 +12,16 @@ export const metadata: Metadata = {
     "Les guides Wield pour rendre ta boîte visible sur les IA et installer l’IA dans ton équipe. À faire soi-même, à son rythme.",
 };
 
-/** Intitulés et tarifs à valider — ce sont des placeholders. */
-const GUIDES = [
-  {
-    kind: "Guide · 48 pages",
-    title: "Rendre ton site citable par les IA",
-    body: "La méthode GEO complète, de l’audit à la première citation.",
-    price: "29 €",
-  },
-  {
-    kind: "Guide · par métier",
-    title: "Les 40 questions que tes clients posent à l’IA",
-    body: "Les prompts réels de ton secteur, et qui sort dessus aujourd’hui.",
-    price: "19 €",
-  },
-  {
-    kind: "Guide technique",
-    title: "Structurer ses données pour les moteurs de réponse",
-    body: "JSON-LD, llms.txt, robots.txt, sitemap : le socle, pas à pas.",
-    price: "39 €",
-  },
-  {
-    kind: "Guide · équipe",
-    title: "Installer l’IA dans une équipe de dix",
-    body: "Quels outils, pour qui, dans quel ordre — sans usine à gaz.",
-    price: "49 €",
-  },
-  {
-    kind: "Guide · direction",
-    title: "Écrire la charte IA de ta boîte",
-    body: "Ce que tes équipes ont le droit de faire, et avec quelles données.",
-    price: "29 €",
-  },
-  {
-    kind: "Guide · opérations",
-    title: "Automatiser dix tâches sans écrire une ligne de code",
-    body: "Devis, relances, comptes rendus : les automatismes qui tiennent.",
-    price: "39 €",
-  },
-];
+
+/** Étiquettes de rayon : le catalogue porte les prix, pas la mise en scène. */
+const KINDS: Record<string, string> = {
+  guide_citable: "Guide · 48 pages",
+  guide_prompts: "Guide · par métier",
+  guide_donnees: "Guide technique",
+  guide_equipe: "Guide · équipe",
+  guide_charte: "Guide · direction",
+  guide_automatiser: "Guide · opérations",
+};
 
 const PACK = [
   "Les six guides, mises à jour comprises",
@@ -58,8 +31,12 @@ const PACK = [
 ];
 
 export default function GuidesPage() {
+  const notice = stripe.configured
+    ? undefined
+    : "Le paiement n’est pas encore activé sur ce déploiement.";
+
   return (
-    <PageShell notice="Maquette — le paiement n’est pas branché.">
+    <PageShell notice={notice}>
       <PageHeader
         eyebrow="La bibliothèque"
         title="Guides IA et GEO"
@@ -70,31 +47,38 @@ export default function GuidesPage() {
         <Container>
           <div className="py-16 lg:py-20">
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {GUIDES.map((guide) => (
-                <li
-                  key={guide.title}
-                  className="flex flex-col rounded-md border border-line bg-surface p-7 transition-colors hover:border-line-strong"
-                >
-                  <p className="eyebrow text-absent">{guide.kind}</p>
+              {GUIDE_SKUS.map((sku) => {
+                const guide = CATALOG[sku];
+                return (
+                  <li
+                    key={sku}
+                    className="flex flex-col rounded-md border border-line bg-surface p-7 transition-colors hover:border-line-strong"
+                  >
+                    <p className="eyebrow text-absent">{KINDS[sku]}</p>
 
-                  <h2 className="mt-5 text-[1.25rem] leading-[1.25]">
-                    {guide.title}
-                  </h2>
+                    <h2 className="mt-5 text-[1.25rem] leading-[1.25]">
+                      {guide.name}
+                    </h2>
 
-                  <p className="mt-3 text-[0.9375rem] leading-[1.6] text-ink-soft">
-                    {guide.body}
-                  </p>
+                    <p className="mt-3 text-[0.9375rem] leading-[1.6] text-ink-soft">
+                      {guide.description}
+                    </p>
 
-                  <div className="mt-auto flex items-center justify-between gap-4 pt-8">
-                    <span className="font-display text-[1.25rem] font-extrabold tabular-nums text-ink">
-                      {guide.price}
-                    </span>
-                    <Button href="/guides" variant="outline" size="md">
-                      Acheter
-                    </Button>
-                  </div>
-                </li>
-              ))}
+                    <div className="mt-auto flex items-end justify-between gap-4 pt-8">
+                      <span className="font-display text-[1.25rem] font-extrabold tabular-nums text-ink">
+                        {formatPrice(guide.amountCents)}
+                      </span>
+                      <CheckoutButton
+                        sku={sku}
+                        label="Acheter"
+                        variant="outline"
+                        size="md"
+                        className="w-auto"
+                      />
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </Container>
@@ -116,10 +100,10 @@ export default function GuidesPage() {
                 </div>
                 <p className="text-right">
                   <span className="block font-display text-[2.25rem] font-extrabold leading-none tabular-nums text-ink">
-                    129 €
+                    {formatPrice(CATALOG.pack.amountCents)}
                   </span>
                   <span className="mt-1.5 block text-[0.8125rem] text-absent line-through tabular-nums">
-                    214 €
+                    {formatPrice(packListPrice())}
                   </span>
                 </p>
               </div>
@@ -134,9 +118,7 @@ export default function GuidesPage() {
               </ul>
 
               <div className="mt-9">
-                <Button href="/guides" size="lg">
-                  Prendre le pack
-                </Button>
+                <CheckoutButton sku="pack" label="Prendre le pack" className="sm:max-w-xs" />
               </div>
             </div>
 
@@ -153,14 +135,14 @@ export default function GuidesPage() {
               </p>
 
               <p className="mt-8 font-display text-[2rem] font-extrabold leading-none tabular-nums text-ink">
-                9 €
+                {formatPrice(CATALOG.brief.amountCents)}
                 <span className="ml-1 font-sans text-[0.9375rem] font-normal text-ink-soft">
                   / mois
                 </span>
               </p>
 
               <div className="mt-auto pt-8">
-                <QuietLink href="/guides">S’abonner au Brief</QuietLink>
+                <CheckoutButton sku="brief" label="S’abonner au Brief" variant="outline" />
               </div>
             </div>
           </div>
